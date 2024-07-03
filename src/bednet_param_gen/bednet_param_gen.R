@@ -1,3 +1,6 @@
+library(dplyr)
+library(tidyr)
+
 D1load = readRDS("pyrethroid_uncertainty.RDS")
 D2load = readRDS("pbo_uncertainty_using_pyrethroid_dn0_for_mn_durability.RDS")
 D3load = readRDS("pyrrole_uncertainty_using_pyrethroid_dn0_for_mn_durability.RDS")
@@ -108,9 +111,6 @@ print(median_ITN_grid)
 saveRDS(median_ITN_grid, "bednet_params_raw.RDS")
 
 bednet_params <- median_ITN_grid
-
-library(dplyr)
-library(tidyr)
 
 # Generate all combinations of proportions where sum equals 1
 proportions <- expand.grid(prop_standard = seq(0, 1, by = 0.1),

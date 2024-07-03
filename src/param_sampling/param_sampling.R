@@ -1,7 +1,6 @@
 library(dplyr)
 library(tidyr)
 
-# Assume orderly2 and other necessary data loading routines are in place
 orderly2::orderly_dependency("bednet_param_gen", "latest()",
                              c("bednet_params.csv" = "bednet_params.csv"))
 
@@ -29,7 +28,7 @@ bednet_combinations <- bednet_params %>%
   transmute(bednet_prop = paste(prop_standard, prop_PBO, prop_pyrrole, sep = ", "))
 
 # Define batch size and calculate number of batches
-batch_size <- 4096  # Adjust as needed based on your system's memory capacity
+batch_size <- 4096
 n_batches <- ceiling(nrow(initial_scenarios) / batch_size)
 
 # Batch processing
@@ -47,10 +46,8 @@ for (i in 1:n_batches) {
   # Output to console which batch is currently being processed
   message(sprintf("Processing batch %d of %d", i, n_batches))
   
-  # Optionally, save each batch to a CSV file
   filepath <- paste0("output_batch_", i, ".csv")
   write.csv(expanded_scenarios, filepath, row.names = FALSE)
 }
 
-# Optional message to indicate completion
 message("All batches processed.")
