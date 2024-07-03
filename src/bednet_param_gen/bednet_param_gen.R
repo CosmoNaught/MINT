@@ -1,8 +1,3 @@
-#######################################################
-##
-## Using this process to estimate uncertainty...
-##
-#######################################################
 D1load = readRDS("pyrethroid_uncertainty.RDS")
 D2load = readRDS("pbo_uncertainty_using_pyrethroid_dn0_for_mn_durability.RDS")
 D3load = readRDS("pyrrole_uncertainty_using_pyrethroid_dn0_for_mn_durability.RDS")
