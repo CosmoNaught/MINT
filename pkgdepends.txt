@@ -2,3 +2,8 @@ mrc-ide/orderly2
 
 dplyr
 tidyr
+lhs
+scales
+ggplot2
+GGally
+reshape2
