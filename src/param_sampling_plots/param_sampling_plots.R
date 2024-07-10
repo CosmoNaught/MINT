@@ -7,20 +7,18 @@ source("plots.R")
 
 set.seed(123)
 
-orderly2::orderly_dependency("param_sampling", "latest()",
+orderly2::orderly_parameters(run = NULL)
+
+if(!run %in% c("short_run", "long_run")) {
+    stop(paste0("Please provide either 'short_run' or 'long_run' as query, provided: ", run))
+}
+
+orderly2::orderly_dependency("param_sampling", "latest(parameter:run == this:run)",
                              c("lhs_scenarios_sample.csv" = "lhs_scenarios_sample.csv",
                              "grid_scenarios_sample.csv" = "grid_scenarios_sample.csv"))
 
-# THIS IS FOR LATER!
-# orderly2::orderly_dependency("random", "latest(parameter:n_samples > 10)",
-#                              c("randm.rds" = "data.rds"))
-
-grid_scenarios_sample <- read.csv("grid_scenarios_sample.csv")
-lhs_scenarios_sample <- read.csv("lhs_scenarios_sample.csv")
-
-# Subset for debug output
-grid_sample <- grid_scenarios_sample# %>% sample_n(5000)
-lhs_sample <- lhs_scenarios_sample# %>% sample_n(5000)
+grid_sample <- read.csv("grid_scenarios_sample.csv")
+lhs_sample <- read.csv("lhs_scenarios_sample.csv")
 
 pdf("plots.pdf")
 

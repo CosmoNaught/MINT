@@ -9,8 +9,21 @@ library(doParallel)
 
 set.seed(123)
 
+orderly2::orderly_parameters(run = NULL)
+
+if(run == "short_run"){
+  total_samples = 10000
+  sample_prop = 0.1
+  subset_samples = 1000
+} else if(run == "long_run"){
+  total_samples = 500000
+  sample_prop = 0.1
+  subset_samples = 5000
+} else {
+  stop(paste0("Please provide either 'short_run' or 'long_run' as query, provided: "), run)
+}
+
 orderly2::orderly_dependency("bednet_param_gen", "latest()", c("bednet_params_raw.RDS" = "bednet_params_raw.RDS"))
-orderly2::orderly_parameters(total_samples = NULL, sample_prop = NULL, subset_samples = NULL)
 
 # Load bednet parameters from CSV
 bednet_params_raw <- readRDS("bednet_params_raw.RDS")
@@ -81,13 +94,18 @@ grid_scenarios <- expand.grid(eir = eir_range, anthropophagy = anthropophagy_ran
                               lsm = lsm_range, stringsAsFactors = FALSE)
 
 # Write to output
+print(dim(grid_scenarios))
+print(dim(lhs_scenarios))
 write.csv(grid_scenarios, "grid_scenarios.csv", row.names = FALSE)
 write.csv(lhs_scenarios, "lhs_scenarios.csv", row.names = FALSE)
+
 
 # Write subset to output for debugging
 grid_sample <- grid_scenarios %>% sample_n(subset_samples)
 lhs_sample <- lhs_scenarios %>% sample_n(subset_samples)
 
+print(dim(grid_sample))
+print(dim(lhs_sample))
 write.csv(grid_sample, "grid_scenarios_sample.csv", row.names = FALSE)
 write.csv(lhs_sample, "lhs_scenarios_sample.csv", row.names = FALSE)
 
