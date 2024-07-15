@@ -5,7 +5,7 @@ get_cols <- function(){
       cols <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 }
 
-plot_prev <- function(output, output_control, cols = cols) {
+plot_prev <- function(output, output_control, timesteps, cols = cols) {
   # Plot for the scenario with interventions
   cols <- get_cols()
 
@@ -39,14 +39,14 @@ plot_prev <- function(output, output_control, cols = cols) {
         lwd = 1)
   
   # Add intervention markers
-  abline(v = bednetstimesteps / 365.25, col = "black", lty = 2, lwd = 1)
-  text(x = (bednetstimesteps + 10) / 365.25, y = 0.95, labels = "Bed net int.", adj = 0, cex = 0.8)
+  abline(v = timesteps$bednet / 365.25, col = "black", lty = 2, lwd = 1)
+  text(x = (timesteps$bednet + 10) / 365.25, y = 0.95, labels = "Bed net int.", adj = 0, cex = 0.8)
   
-  abline(v = sprayingtimesteps / 365.25, lty = 2, lwd = 1, col = "black")
-  text(x = (sprayingtimesteps + 10) / 365.25, y = 0.9, labels = "Spraying\nint.", adj = 0, cex = 0.8)
+  abline(v = timesteps$irs / 365.25, lty = 2, lwd = 1, col = "black")
+  text(x = (timesteps$irs + 10) / 365.25, y = 0.9, labels = "Spraying\nint.", adj = 0, cex = 0.8)
   
-  abline(v = lsmtimesteps / 365.25, lty = 2, lwd = 1, col = "black")
-  text(x = (lsmtimesteps + 10) / 365.25, y = 0.85, labels = "LSM\nint.", adj = 0, cex = 0.8)
+  abline(v = timesteps$lsm / 365.25, lty = 2, lwd = 1, col = "black")
+  text(x = (timesteps$lsm + 10) / 365.25, y = 0.85, labels = "LSM\nint.", adj = 0, cex = 0.8)
 
   # Add grid and legend
   grid(lty = 2, col = "grey80", lwd = 0.5)
