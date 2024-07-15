@@ -214,14 +214,15 @@ treatment_simparams <- treatment_simparams |>
 
 # Set defaults for comparison
 
-output_control <- run_simulation(timesteps = sim_length, parameters = baseline_simparams)
-
+output_control <- run_simulation(
+                                 timesteps = sim_length,
+                                 parameters = baseline_simparams)
 
 # Call simulation
 
 output <- run_simulation(
-    timesteps = sim_length,
-    parameters = treatment_simparams)
+                         timesteps = sim_length,
+                         parameters = treatment_simparams)
 
 # Plot prevalence with both bednet and spraying interventions
 
