@@ -33,7 +33,7 @@ lhs_sample <- lhs_samples[num_sample, ]
 
 year <- 365
 sim_length <- 6 * year
-human_population <- 10000
+human_population <- 100000
 
 
 ## Set seasonality
@@ -62,7 +62,7 @@ simparams <- get_parameters(
   list(
     human_population = human_population,
     # seasonality parameters
-    model_seasonality = TRUE, 
+    model_seasonality = TRUE,
     g0 = g0,
     g = g,
     h = h
@@ -92,11 +92,14 @@ simparams <- set_equilibrium(
     init_EIR = starting_EIR
 )
 
-baseline_simparams <- simparams
-treatment_simparams <- simparams
-# Set bednet parameters
 
-bednetstimesteps <- c(0, 3) * year # The bed nets will be distributed at the end of the first and the 4th year. 
+# controls historic baseline prameters 
+baseline_simparams <- simparams
+
+# controls future basline parameters
+treatment_simparams <- simparams
+
+# Set bednet parameters #
 
 target_dn0 <- round(lhs_sample$dn0, digits = 3)
 
@@ -109,7 +112,24 @@ closest_index <- which.min(differences)
 ## FOR NOW EXTRACT THE LAST VALUE
 selected_net_params <- bednet_params[closest_index,]
 
-## Extract dn0 and then check against pyrethroid only rn0 gamman
+# Set bednets baseline #
+
+bednetstimesteps <- 0
+
+baseline_simparams <- set_bednets(
+  baseline_simparams,
+  timesteps = bednetstimesteps,
+  coverages = lhs_sample$itn_use,  # Each round is distributed to 50% of the population.
+  retention = 5 * year, # Nets are kept on average 5 years
+  dn0 = matrix(c(lhs_sample$dn0), nrow = length(bednetstimesteps), ncol = 1), # Matrix of death probabilities for each mosquito species over time
+  rn = matrix(c(selected_net_params$rn0), nrow = length(bednetstimesteps), ncol = 1), # Matrix of repelling probabilities for each mosquito species over time
+  rnm = matrix(c(.24), nrow = length(bednetstimesteps), ncol = 1), # Matrix of minimum repelling probabilities for each mosquito species over time
+  gamman = rep(selected_net_params$gamman * 365, length(bednetstimesteps)) # Vector of bed net half-lives for each distribution timestep
+)
+
+
+# Set bednet intervention #
+bednetstimesteps <- c(0, 3) * year # The bed nets will be distributed at the end of the first and the 4th year. 
 
 treatment_simparams <- set_bednets(
   treatment_simparams,
@@ -119,16 +139,34 @@ treatment_simparams <- set_bednets(
   dn0 = matrix(c(lhs_sample$dn0), nrow = length(bednetstimesteps), ncol = 1), # Matrix of death probabilities for each mosquito species over time
   rn = matrix(c(selected_net_params$rn0), nrow = length(bednetstimesteps), ncol = 1), # Matrix of repelling probabilities for each mosquito species over time
   rnm = matrix(c(.24), nrow = length(bednetstimesteps), ncol = 1), # Matrix of minimum repelling probabilities for each mosquito species over time
-  gamman = rep(selected_net_params$gamman * 365, 2) # Vector of bed net half-lives for each distribution timestep
+  gamman = rep(selected_net_params$gamman * 365, length(bednetstimesteps)) # Vector of bed net half-lives for each distribution timestep
 )
 
-# Set irs parameters
+# Set irs parameters #
 
 peak <- peak_season_offset(treatment_simparams)
 month <- 30
 
+# Set IRS baseline #
+
+sprayingtimesteps <- c(0, 1, 2) * year + peak - 3 * month # A round of IRS is implemented in the 1st and second year 3 months prior to peak transmission.
+
+baseline_simparams <- set_spraying(
+  baseline_simparams,
+  timesteps = sprayingtimesteps,
+  coverages = c(rep(lhs_sample$irs_use,length(sprayingtimesteps))),#c(lhs_sample$irs_use,lhs_sample$irs_future), # # The first round covers 30% of the population and the second covers 80%. 
+  ls_theta = matrix(2.025, nrow=length(sprayingtimesteps), ncol=1), # Matrix of mortality parameters; nrows=length(timesteps), ncols=length(species) 
+  ls_gamma = matrix(-0.009, nrow=length(sprayingtimesteps), ncol=1), # Matrix of mortality parameters per round of IRS and per species
+  ks_theta = matrix(-2.222, nrow=length(sprayingtimesteps), ncol=1), # Matrix of feeding success parameters per round of IRS and per species
+  ks_gamma = matrix(0.008, nrow=length(sprayingtimesteps), ncol=1), # Matrix of feeding success parameters per round of IRS and per species
+  ms_theta = matrix(-1.232, nrow=length(sprayingtimesteps), ncol=1), # Matrix of deterrence parameters per round of IRS and per species
+  ms_gamma = matrix(-0.009, nrow=length(sprayingtimesteps), ncol=1) # Matrix of deterrence parameters per round of IRS and per species
+)
+
+
+# Set IRS intervention #
+
 sprayingtimesteps <- c(0, 1, 2, 3, 4, 5, 6) * year + peak - 3 * month # A round of IRS is implemented in the 1st and second year 3 months prior to peak transmission.
-#sprayingtimesteps[1] <- 0
 
 treatment_simparams <- set_spraying(
   treatment_simparams,
@@ -142,12 +180,29 @@ treatment_simparams <- set_spraying(
   ms_gamma = matrix(-0.009, nrow=length(sprayingtimesteps), ncol=1) # Matrix of deterrence parameters per round of IRS and per species
 )
 
-# Set LSM -- turn on/off
+
+# Set LSM baseline #
+# Specify the LSM coverage
+lsm_coverage <- 0
+
+cc <- get_init_carrying_capacity(baseline_simparams)
+
+lsmtimesteps <- c(1e-9) * year
+
+# Set LSM by reducing the carrying capacity by (1 - coverage)
+baseline_simparams <- baseline_simparams |>
+  set_carrying_capacity(
+    carrying_capacity = matrix(cc * (1 - lsm_coverage), ncol = 1),
+    timesteps = lsmtimesteps
+  )
+
+# Set LSM intervention #
 
 # Specify the LSM coverage
 lsm_coverage <- lhs_sample$lsm
 
 cc <- get_init_carrying_capacity(treatment_simparams)
+
 lsmtimesteps <- c(3) * year
 
 # Set LSM by reducing the carrying capacity by (1 - coverage)
@@ -171,5 +226,5 @@ output <- run_simulation(
 # Plot prevalence with both bednet and spraying interventions
 
 pdf("prpf210.pdf")
-plot_prev()
+plot_prev(output, output_control)
 dev.off()
