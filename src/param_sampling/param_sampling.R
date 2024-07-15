@@ -31,7 +31,7 @@ bednet_params_raw <- readRDS("bednet_params_raw.RDS")
 # Define parameter ranges
 eir_range <- sort(10^(runif(12, log10(0.5), log10(300))))
 dn0_min_non_zero <- min(bednet_params_raw$dn0[bednet_params_raw$dn0 > 0]) * 0.9
-dn0_max <- max(bednet_params_raw$dn0) * 1.1
+dn0_max <- max(bednet_params_raw$dn0) * 1.2
 dn0_range <- sort(runif(10, dn0_min_non_zero, dn0_max))
 anthropophagy_range <- c(70, 98)
 biting_inbed_indoors_range <- c(70, 98)
