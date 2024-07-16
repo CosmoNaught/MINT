@@ -5,8 +5,8 @@ get_cols <- function(){
       cols <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 }
 
-plot_prev <- function(output, output_control, timesteps, cols = cols) {
-  # Plot for the scenario with interventions
+plot_prev <- function(output, output_control = NULL, timesteps, cols = cols) {
+  # Plot for the scenario with treatments
   cols <- get_cols()
 
   # Calculate the time in years from days for plotting
@@ -33,12 +33,14 @@ plot_prev <- function(output, output_control, timesteps, cols = cols) {
   axis(1, at = quarter_ticks, labels = FALSE, tck = -0.01)
 
   # Plot for the control scenario
+  if (!is.null(output_control)) {
   lines(x = output_control$timestep / 365.25, 
         y = output_control$n_detect_730_3650 / output_control$n_730_3650,
         col = cols[5], 
         lwd = 1)
+  }
   
-  # Add intervention markers
+  # Add treatment markers
   abline(v = timesteps$bednet / 365.25, col = "black", lty = 2, lwd = 1)
   text(x = (timesteps$bednet + 10) / 365.25, y = 0.95, labels = "Bed net int.", adj = 0, cex = 0.8)
   
@@ -53,7 +55,7 @@ plot_prev <- function(output, output_control, timesteps, cols = cols) {
   legend("bottomleft", 
          box.lty = 0, 
          bg = "white",
-         legend = c("Prevalence for intervention scenario", "Prevalence for control scenario"),
+         legend = c("Prevalence for treatment scenario", "Prevalence for control scenario"),
          col = c(cols[3], cols[5]), 
          lty = c(1, 1), 
          lwd = 2, 
