@@ -62,3 +62,10 @@ plot_prev <- function(output, output_control = NULL, timesteps, cols = cols) {
          cex = 0.8, 
          y.intersp = 1.3)
 }
+
+# Function to plot simulation results
+plot_simulations <- function(output, output_control = NULL, timesteps) {
+  pdf("prpf210.pdf")
+  plot_prev(output, output_control, timesteps)
+  dev.off()
+}

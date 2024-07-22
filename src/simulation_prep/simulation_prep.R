@@ -11,8 +11,9 @@ set.seed(123)
 
 # Constants
 YEAR <- 365
-SIM_LENGTH <- 6 * YEAR
-HUMAN_POPULATION <- 1000
+
+SIM_LENGTH <- 12 * YEAR
+HUMAN_POPULATION <- 100000
 
 # Load dependencies
 orderly2::orderly_parameters(run = NULL,

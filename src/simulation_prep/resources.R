@@ -69,7 +69,7 @@ set_bednet_parameters <- function(simparams, lhs_sample, bednet_params, baseline
       gamman = rep(selected_net_params$gamman * 365, length(bednetstimesteps))
     )
   } else {
-    bednetstimesteps <- c(0, 3) * YEAR
+    bednetstimesteps <- c(0, 9) * YEAR
     simparams <- set_bednets(
       simparams,
       timesteps = bednetstimesteps,
@@ -91,7 +91,7 @@ set_irs_parameters <- function(simparams, lhs_sample, baseline = TRUE) {
   month <- 30
   
   if (baseline) {
-    sprayingtimesteps <- c(0, 1, 2) * YEAR + peak - 3 * month
+    sprayingtimesteps <- seq(0, 8) * YEAR + peak - 3 * month
     simparams <- set_spraying(
       simparams,
       timesteps = sprayingtimesteps,
@@ -104,11 +104,11 @@ set_irs_parameters <- function(simparams, lhs_sample, baseline = TRUE) {
       ms_gamma = matrix(-0.009, nrow = length(sprayingtimesteps), ncol = 1)
     )
   } else {
-    sprayingtimesteps <- c(0, 1, 2, 3, 4, 5, 6) * YEAR + peak - 3 * month
+    sprayingtimesteps <- seq(0,12) * YEAR + peak - 3 * month
     simparams <- set_spraying(
       simparams,
       timesteps = sprayingtimesteps,
-      coverages = c(rep(lhs_sample$irs_use, 3), rep(lhs_sample$irs_future, 4)),
+      coverages = c(rep(lhs_sample$irs_use, 9), rep(lhs_sample$irs_future, 4)),
       ls_theta = matrix(2.025, nrow = length(sprayingtimesteps), ncol = 1),
       ls_gamma = matrix(-0.009, nrow = length(sprayingtimesteps), ncol = 1),
       ks_theta = matrix(-2.222, nrow = length(sprayingtimesteps), ncol = 1),
@@ -135,7 +135,7 @@ set_lsm_parameters <- function(simparams, lhs_sample, baseline = TRUE) {
   } else {
     lsm_coverage <- lhs_sample$lsm
     cc <- get_init_carrying_capacity(simparams)
-    lsmtimesteps <- c(3) * YEAR
+    lsmtimesteps <- 9 * YEAR
     
     simparams <- simparams |> set_carrying_capacity(
       carrying_capacity = matrix(cc * (1 - lsm_coverage), ncol = 1),
@@ -146,25 +146,10 @@ set_lsm_parameters <- function(simparams, lhs_sample, baseline = TRUE) {
   list(simparams = simparams, timesteps = lsmtimesteps)
 }
 
-# Function to run simulations and plot results
-run_simulations <- function(sim_length, baseline_simparams, treatment_simparams) {
-  output_control <- run_simulation(timesteps = sim_length, parameters = baseline_simparams)
-  output <- run_simulation(timesteps = sim_length, parameters = treatment_simparams)
-  return(list(output = output, output_control = output_control))
-}
-
-
 run_control_sim <- function(sim_length, baseline_simparams) {
     output_control <- run_simulation(timesteps = sim_length, parameters = baseline_simparams)
 }
 
 run_treatment_sim <- function(sim_length, treatment_simparams) {
     output <- run_simulation(timesteps = sim_length, parameters = treatment_simparams)
-}
-
-# Function to plot simulation results
-plot_simulations <- function(output, output_control = NULL, timesteps) {
-  pdf("prpf210.pdf")
-  plot_prev(output, output_control, timesteps)
-  dev.off()
 }
