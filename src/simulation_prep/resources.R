@@ -51,35 +51,61 @@ initialize_simulation_parameters <- function(lhs_sample, selected_seasonality) {
 
 # Function to set bednet parameters and return timesteps
 set_bednet_parameters <- function(simparams, lhs_sample, bednet_params, baseline = TRUE) {
-  target_dn0 <- round(lhs_sample$dn0, digits = 3)
-  differences <- abs(bednet_params$dn0 - target_dn0)
-  closest_index <- which.min(differences)
-  selected_net_params <- bednet_params[closest_index,]
+  # Sample value for dn0_use and dn0_future (replace lhs_sample$dn0_use and lhs_sample$dn0_future with actual data)
+  target_dn0_use <- round(lhs_sample$dn0_use, digits = 3)
+  target_dn0_future <- round(lhs_sample$dn0_future, digits = 3)
+
+  # Calculate differences and find the closest index for dn0_use
+  differences_use <- abs(bednet_params$dn0 - target_dn0_use)
+  closest_index_use <- which.min(differences_use)
+  selected_net_params_use <- bednet_params[closest_index_use, ]
+
+  # Calculate differences and find the closest index for dn0_future
+  differences_future <- abs(bednet_params$dn0 - target_dn0_future)
+  closest_index_future <- which.min(differences_future)
+  selected_net_params_future <- bednet_params[closest_index_future, ]
   
+  lambda <- 5 * YEAR
+  routine_usage <- 0.15
+
   if (baseline) {
     bednetstimesteps <- 0
     simparams <- set_bednets(
       simparams,
       timesteps = bednetstimesteps,
       coverages = lhs_sample$itn_use,
-      retention = 5 * YEAR,
-      dn0 = matrix(c(lhs_sample$dn0), nrow = length(bednetstimesteps), ncol = 1),
-      rn = matrix(c(selected_net_params$rn0), nrow = length(bednetstimesteps), ncol = 1),
+      retention = lambda,
+      dn0 = matrix(c(selected_net_params_use$dn0), nrow = length(bednetstimesteps), ncol = 1),
+      rn = matrix(c(selected_net_params_use$rn0), nrow = length(bednetstimesteps), ncol = 1),
       rnm = matrix(c(.24), nrow = length(bednetstimesteps), ncol = 1),
-      gamman = rep(selected_net_params$gamman * 365, length(bednetstimesteps))
+      gamman = rep(selected_net_params_use$gamman * 365, length(bednetstimesteps))
     )
   } else {
-    bednetstimesteps <- c(0, 9) * YEAR
-    simparams <- set_bednets(
-      simparams,
-      timesteps = bednetstimesteps,
-      coverages = c(lhs_sample$itn_use, lhs_sample$itn_future),
-      retention = 5 * YEAR,
-      dn0 = matrix(c(lhs_sample$dn0), nrow = length(bednetstimesteps), ncol = 1),
-      rn = matrix(c(selected_net_params$rn0), nrow = length(bednetstimesteps), ncol = 1),
-      rnm = matrix(c(.24), nrow = length(bednetstimesteps), ncol = 1),
-      gamman = rep(selected_net_params$gamman * 365, length(bednetstimesteps))
-    )
+    if (lhs_sample$anc == 0){
+      bednetstimesteps <- c(0, 9) * YEAR
+      simparams <- set_bednets(
+        simparams,
+        timesteps = bednetstimesteps,
+        coverages = c(lhs_sample$itn_use, lhs_sample$itn_future),
+        retention = lambda,
+        dn0 = matrix(c(selected_net_params_use$dn0, selected_net_params_future$dn0), nrow = length(bednetstimesteps), ncol = 1),
+        rn = matrix(c(selected_net_params_use$rn0, selected_net_params_future$rn0), nrow = length(bednetstimesteps), ncol = 1),
+        rnm = matrix(c(.24), nrow = length(bednetstimesteps), ncol = 1),
+        gamman = rep(c(selected_net_params_use$gamman, selected_net_params_future$gamman) * 365)
+      )
+    } else {
+      bednetstimesteps <- c(0, 9, 10, 11) * YEAR
+      simparams <- set_bednets(
+        simparams,
+        timesteps = bednetstimesteps,
+        coverages = c(lhs_sample$itn_use, lhs_sample$itn_future, rep(routine_usage, 2)),
+        retention = lambda,
+        dn0 = matrix(c(selected_net_params_use$dn0, rep(selected_net_params_future$dn0, 3)), nrow = length(bednetstimesteps), ncol = 1),
+        rn = matrix(c(selected_net_params_use$rn0, rep(selected_net_params_future$rn0, 3)), nrow = length(bednetstimesteps), ncol = 1),
+        rnm = matrix(c(.24), nrow = length(bednetstimesteps), ncol = 1),
+        gamman = rep(c(selected_net_params_use$gamman, rep(selected_net_params_future$gamman, 3)) * 365)
+      )
+    }
   }
   
   list(simparams = simparams, timesteps = bednetstimesteps)

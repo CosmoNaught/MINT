@@ -25,13 +25,12 @@ if(!run %in% c("short_run", "long_run")) {
   stop(paste0("Please provide either 'short_run' or 'long_run' as query, provided: ", run))
 }
 
-orderly2::orderly_dependency("bednet_param_gen", "latest()", 
-                              c("bednet_params.csv" = "bednet_params.csv"))
+orderly2::orderly_dependency("collate_bednet_param", "latest()", 
+                              c("bednet_params_raw.RDS" = "bednet_params_raw.RDS"))
 orderly2::orderly_dependency("param_sampling", "latest(parameter:run == this:run)",
                               c("lhs_scenarios_sample.csv" = "lhs_scenarios_sample.csv"))
 
-
-bednet_params <- read.csv("bednet_params.csv")
+bednet_params <- readRDS("bednet_params_raw.RDS")
 lhs_samples <- read.csv("lhs_scenarios_sample.csv")
 lhs_sample <- lhs_samples[num_sample, ]
 
@@ -74,7 +73,8 @@ output <- list()
 
 # Create a list object called 'timesteps' with unique timesteps for each treatment
 output$treatment_timesteps <- list(
-  bednet = unique_bednet_timesteps,
+  mass_bednet = unique_bednet_timesteps[1:2],
+  routine_bednet = unique_bednet_timesteps[3:length(unique_bednet_timesteps)],
   irs = unique_irs_timesteps,
   lsm = unique_lsm_timesteps
 )

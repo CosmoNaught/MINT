@@ -1,3 +1,10 @@
+###########################################################
+##
+## AS OF 22/07/2024 THIS METHOD IS DEPRICATED
+## WILL BE DELETED IN FUTURE UPDATE PRIOR TO RELEASE
+##
+#############################################################
+
 library(dplyr)
 library(tidyr)
 

@@ -41,9 +41,12 @@ plot_prev <- function(output, output_control = NULL, timesteps, cols = cols) {
   }
   
   # Add treatment markers
-  abline(v = timesteps$bednet / 365.25, col = "black", lty = 2, lwd = 1)
-  text(x = (timesteps$bednet + 10) / 365.25, y = 0.95, labels = "Bed net int.", adj = 0, cex = 0.8)
+  abline(v = timesteps$mass_bednet / 365.25, col = "black", lty = 2, lwd = 1)
+  text(x = (timesteps$mass_bednet + 10) / 365.25, y = 0.95, labels = "Mass ITN.", adj = 0, cex = 0.8)
   
+  abline(v = timesteps$routine_bednet / 365.25, col = "black", lty = 2, lwd = 1)
+  text(x = (timesteps$routine_bednet + 10) / 365.25, y = 0.95, labels = "Routine ITN", adj = 0, cex = 0.8)
+
   abline(v = timesteps$irs / 365.25, lty = 2, lwd = 1, col = "black")
   text(x = (timesteps$irs + 10) / 365.25, y = 0.9, labels = "Spraying\nint.", adj = 0, cex = 0.8)
   

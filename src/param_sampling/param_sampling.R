@@ -23,7 +23,7 @@ if(run == "short_run"){
   stop(paste0("Please provide either 'short_run' or 'long_run' as query, provided: "), run)
 }
 
-orderly2::orderly_dependency("bednet_param_gen", "latest()", c("bednet_params_raw.RDS" = "bednet_params_raw.RDS"))
+orderly2::orderly_dependency("collate_bednet_param", "latest()", c("bednet_params_raw.RDS" = "bednet_params_raw.RDS"))
 
 # Load bednet parameters from CSV
 bednet_params_raw <- readRDS("bednet_params_raw.RDS")
@@ -36,15 +36,16 @@ dn0_range <- sort(runif(10, dn0_min_non_zero, dn0_max))
 anthropophagy_range <- c(70, 98)
 biting_inbed_indoors_range <- c(70, 98)
 seasonal_range <- c(0, 1)
-itn_use_range <- c(seq(0, 1, by = 0.2), 0.05, 0.95)
-irs_use_range <- c(seq(0, 1, by = 0.2), 0.05, 0.95)
+anc_range <- c(0, 1)
+itn_use_range <- seq(0, 1, by = 0.2)
+irs_use_range <- seq(0, 1, by = 0.2)
 itn_future_range <- seq(0, 1, length.out = 5)
 irs_future_range <- seq(0, 1, length.out = 5)
 lsm_range <- c(seq(0, 1, length.out = 5), 0, 0.9)
 
 # Collect all parameter ranges in a list for LHS
-all_ranges <- list(eir = eir_range, dn0 = dn0_range, anthropophagy = anthropophagy_range,
-                   biting_inbed_indoors = biting_inbed_indoors_range, seasonal = seasonal_range,
+all_ranges <- list(eir = eir_range, dn0_use = dn0_range, dn0_future = dn0_range, anthropophagy = anthropophagy_range,
+                   biting_inbed_indoors = biting_inbed_indoors_range, seasonal = seasonal_range, anc = anc_range,
                    itn_use = itn_use_range, irs_use = irs_use_range, itn_future = itn_future_range,
                    irs_future = irs_future_range, lsm = lsm_range)
 
@@ -88,8 +89,8 @@ lhs_scenarios <- rbind(lhs_scenarios, corner_samples)
 
 # Base expand grid scenario
 grid_scenarios <- expand.grid(eir = eir_range, anthropophagy = anthropophagy_range,
-                              biting_inbed_indoors = biting_inbed_indoors_range, seasonal = seasonal_range,
-                              dn0 = dn0_range, itn_use = itn_use_range, irs_use = irs_use_range,
+                              biting_inbed_indoors = biting_inbed_indoors_range, seasonal = seasonal_range, anc = anc_range,
+                              dn0_use = dn0_range, dn0_future = dn0_range, itn_use = itn_use_range, irs_use = irs_use_range,
                               itn_future = itn_future_range, irs_future = irs_future_range,
                               lsm = lsm_range, stringsAsFactors = FALSE)
 
