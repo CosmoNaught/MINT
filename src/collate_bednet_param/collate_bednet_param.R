@@ -1,26 +1,20 @@
 # Load necessary libraries
 library(dplyr)
 
+# Function to read CSV and apply transformations
+load_itn_data <- function(file_path, net_type) {
+  data <- read.csv(file_path)
+  data <- data %>%
+    mutate(net_type = net_type) %>%
+    rename(dn0 = ERG_d_ITN0, rn0 = ERG_r_ITN0) %>%
+    select(dn0, rn0, gamman, bioassay_surv, net_type)
+  return(data)
+}
+
 # Load the data
-D1load <- read.csv("pyrethroid_only_median_july2024.csv")
-D2load <- read.csv("pyrethroid_pbo_median_july2024.csv")
-D3load <- read.csv("pyrethroid_pyrrole_median_july2024.csv")
-
-# Add a new column to indicate the net type and rename the columns
-D1load <- D1load %>%
-  mutate(net_type = "pyrethroid_only") %>%
-  rename(dn0 = ERG_d_ITN0, rn0 = ERG_r_ITN0) %>%
-  select(dn0, rn0, gamman, bioassay_surv, net_type)
-
-D2load <- D2load %>%
-  mutate(net_type = "pyrethroid_pbo") %>%
-  rename(dn0 = ERG_d_ITN0, rn0 = ERG_r_ITN0) %>%
-  select(dn0, rn0, gamman, bioassay_surv, net_type)
-
-D3load <- D3load %>%
-  mutate(net_type = "pyrethroid_pyrrole") %>%
-  rename(dn0 = ERG_d_ITN0, rn0 = ERG_r_ITN0) %>%
-  select(dn0, rn0, gamman, bioassay_surv, net_type)
+D1load <- load_itn_data("pyrethroid_only_median_july2024.csv", "pyrethroid_only")
+D2load <- load_itn_data("pyrethroid_pbo_median_july2024.csv", "pyrethroid_pbo")
+D3load <- load_itn_data("pyrethroid_pyrrole_median_july2024.csv", "pyrethroid_pyrrole")
 
 # Combine the datasets
 ITN_median_param <- bind_rows(D1load, D2load, D3load)
