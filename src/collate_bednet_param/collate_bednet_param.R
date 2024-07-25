@@ -1,6 +1,6 @@
 # Load necessary libraries
 library(spearMINT)
-browser()
+
 # Define file paths
 file_paths <- list(
   "pyrethroid_only" = "pyrethroid_only_median_july2024.csv",
