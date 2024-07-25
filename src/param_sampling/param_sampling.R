@@ -49,8 +49,6 @@ all_ranges <- list(eir = eir_range, dn0_use = dn0_range, dn0_future = dn0_range,
                    itn_use = itn_use_range, irs_use = irs_use_range, itn_future = itn_future_range,
                    irs_future = irs_future_range, lsm = lsm_range)
 
-#total_samples <- 500000
-#sample_prop <- 0.1
 num_corner_samples <- ceiling(sample_prop * total_samples)
 corner_samples <- expand.grid(lapply(all_ranges, function(r) r))[1:num_corner_samples, ]
 n_lhs <- total_samples - num_corner_samples
