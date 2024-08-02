@@ -1,4 +1,5 @@
 mrc-ide/orderly2
+mrc-ide/malariasimulation@v1.6.0
 
 dplyr
 tidyr
@@ -7,3 +8,7 @@ scales
 ggplot2
 GGally
 reshape2
+foreach
+data.table
+
+CosmoNaught/spearMINT

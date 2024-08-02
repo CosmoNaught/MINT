@@ -32,13 +32,14 @@ orderly2::orderly_dependency("collate_bednet_param", "latest()", c("bednet_param
 bednet_params_raw <- readRDS("bednet_params_raw.RDS")
 
 # Define parameter ranges
-eir_range <- sort(10^(runif(16, log10(0.0001), log10(300))))
+eir_range <- sort(10^(runif(16, log10(0.5), log10(300))))
 dn0_min_non_zero <- min(bednet_params_raw$dn0[bednet_params_raw$dn0 > 0]) * 0.9
 dn0_max <- max(bednet_params_raw$dn0) * 1.2
 dn0_range <- sort(runif(10, dn0_min_non_zero, dn0_max))
 Q0_range <- c(0.6, 1)
 phi_bednets_range <- c(0.4, 0.95)
 seasonal_range <- c(0, 1)
+routine_range <- c(0, 1)
 itn_use_range <- seq(0, 1, by = 0.2)
 irs_use_range <- seq(0, 1, by = 0.2)
 itn_future_range <- seq(0, 1, length.out = 5)
@@ -47,7 +48,7 @@ lsm_range <- c(seq(0, 1, length.out = 5), 0, 0.9)
 
 # Collect all parameter ranges in a list for LHS
 all_ranges <- list(eir = eir_range, dn0_use = dn0_range, dn0_future = dn0_range, Q0 = Q0_range,
-                   phi_bednets = phi_bednets_range, seasonal = seasonal_range, 
+                   phi_bednets = phi_bednets_range, seasonal = seasonal_range, routine = routine_range,
                    itn_use = itn_use_range, irs_use = irs_use_range, itn_future = itn_future_range,
                    irs_future = irs_future_range, lsm = lsm_range)
 
@@ -91,7 +92,7 @@ lhs_scenarios <- rbind(lhs_scenarios, corner_samples)
 
 # Base expand grid scenario
 grid_scenarios <- expand.grid(eir = eir_range, Q0 = Q0_range,
-                              phi_bednets = phi_bednets_range, seasonal = seasonal_range, 
+                              phi_bednets = phi_bednets_range, seasonal = seasonal_range, routine = routine_range,
                               dn0_use = dn0_range, dn0_future = dn0_range, itn_use = itn_use_range, irs_use = irs_use_range,
                               itn_future = itn_future_range, irs_future = irs_future_range,
                               lsm = lsm_range, stringsAsFactors = FALSE)

@@ -1,10 +1,17 @@
 # Load necessary libraries
 library(malariasimulation)
 library(tibble)
+devtools::load_all("/home/ye120/net/malaria/Cosmo/spearMINT")
 
 # Source additional scripts
+source("set_inits.R")
+source("set_species.R")
+source("set_seasonality.R")
+source("set_bednets.R")
+source("set_irs.R")
+source("set_lsm.R")
+source("launch_sim.R")
 source("debug_plot.R")
-source("resources.R")
 
 # Set seed for reproducibility
 set.seed(123)
@@ -19,6 +26,8 @@ HUMAN_POPULATION <- 100000
 orderly2::orderly_parameters(run = NULL,
 num_sample = NULL,
 run_control = NULL,
+ parallel = NULL,
+ repetitions = NULL,
 plot = NULL)
 
 if(!run %in% c("short_run", "long_run")) {
@@ -27,12 +36,18 @@ if(!run %in% c("short_run", "long_run")) {
 
 orderly2::orderly_dependency("collate_bednet_param", "latest()", 
                               c("bednet_params_raw.RDS" = "bednet_params_raw.RDS"))
+
 orderly2::orderly_dependency("param_sampling", "latest(parameter:run == this:run)",
-                              c("lhs_scenarios_sample.csv" = "lhs_scenarios_sample.csv"))
+                              c("lhs_scenarios.csv" = "lhs_scenarios.csv"))
 
 bednet_params <- readRDS("bednet_params_raw.RDS")
-lhs_samples <- read.csv("lhs_scenarios_sample.csv")
-lhs_sample <- lhs_samples[num_sample, ]
+#lhs_samples <- read.csv("lhs_scenarios.csv")
+
+# Load the first 100k rows
+chunk_size <- 100000
+data_chunk <- data.table::fread("lhs_scenarios.csv", nrows = chunk_size)
+
+lhs_sample <- data_chunk[num_sample, ]
 
 selected_seasonality <- set_seasonality(lhs_sample)
 simparams <- initialize_simulation_parameters(lhs_sample, selected_seasonality)
@@ -73,8 +88,7 @@ output <- list()
 
 # Create a list object called 'timesteps' with unique timesteps for each treatment
 output$treatment_timesteps <- list(
-  mass_bednet = unique_bednet_timesteps[1:2],
-  routine_bednet = unique_bednet_timesteps[3:length(unique_bednet_timesteps)],
+  mass_bednet = c(0, 3, 6, 9) * 365,
   irs = unique_irs_timesteps,
   lsm = unique_lsm_timesteps
 )
@@ -84,7 +98,10 @@ if (run_control) {
     output$control_simulation_results <- control_simulation_results
 }
 
-treatment_simulation_results <- run_treatment_sim(SIM_LENGTH, treatment_simparams)
+treatment_simulation_results <- run_sim_with_reps(
+  SIM_LENGTH, treatment_simparams, repetitions, parallel
+  )
+
 output$treatment_simulation_results <- treatment_simulation_results
 
 if (plot) {

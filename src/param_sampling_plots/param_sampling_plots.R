@@ -26,6 +26,6 @@ param_histogram_plot(grid_sample, lhs_sample)
 param_scatter_plot(grid_sample, lhs_sample)
 param_pair_scatter_plot(grid_sample, lhs_sample, "eir", "dn0")
 param_pair_scatter_plot(grid_sample, lhs_sample, "itn_future", "irs_future")
-param_pair_scatter_plot(grid_sample, lhs_sample, "anthropophagy", "biting_inbed_indoors")
+param_pair_scatter_plot(grid_sample, lhs_sample, "Q0", "phi_bednets")
 
 dev.off()

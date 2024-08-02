@@ -1,6 +1,9 @@
 /.outpack/
 /archive/
 /draft/
+/hipercow/
+.DS_Store
+src/.DS_Store
 
 # ---VVV--- added by orderly ---VVV----------------
 # Don't manually edit content between these markers
