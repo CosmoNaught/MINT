@@ -25,11 +25,11 @@ HUMAN_POPULATION <- 100000
 
 # Load dependencies
 orderly2::orderly_parameters(run = NULL,
-num_sample = NULL,
-run_control = NULL,
- repetitions = NULL,
- parallel = NULL,
-plot = NULL)
+    num_sample = NULL,
+    repetitions = NULL,
+    parallel = NULL,
+    workers_override = NULL,
+    plot = NULL)
 
 if(!run %in% c("short_run", "long_run")) {
   stop(paste0("Please provide either 'short_run' or 'long_run' as query, provided: ", run))
@@ -51,39 +51,27 @@ data_chunk <- data.table::fread("lhs_scenarios.csv", nrows = chunk_size)
 lhs_sample <- data_chunk[num_sample, ]
 
 selected_seasonality <- set_seasonality(lhs_sample)
-simparams <- initialize_simulation_parameters(lhs_sample, selected_seasonality)
+simparams <- initialize_simulation_parameters(lhs_sample, HUMAN_POPULATION, selected_seasonality)
 
-baseline_simparams <- simparams
 treatment_simparams <- simparams
 
 # Initialize parameters and lists to store timesteps
-bednet_baseline_result <- set_bednet_parameters(baseline_simparams, lhs_sample, bednet_params, baseline = TRUE)
-baseline_simparams <- bednet_baseline_result$simparams
-bednet_baseline_timesteps <- bednet_baseline_result$timesteps
 
-bednet_treatment_result <- set_bednet_parameters(treatment_simparams, lhs_sample, bednet_params, baseline = FALSE)
+bednet_treatment_result <- set_bednet_parameters(treatment_simparams, lhs_sample, bednet_params)
 treatment_simparams <- bednet_treatment_result$simparams
 bednet_treatment_timesteps <- bednet_treatment_result$timesteps
 
-irs_baseline_result <- set_irs_parameters(baseline_simparams, lhs_sample, baseline = TRUE)
-baseline_simparams <- irs_baseline_result$simparams
-irs_baseline_timesteps <- irs_baseline_result$timesteps
-
-irs_treatment_result <- set_irs_parameters(treatment_simparams, lhs_sample, baseline = FALSE)
+irs_treatment_result <- set_irs_parameters(treatment_simparams, lhs_sample)
 treatment_simparams <- irs_treatment_result$simparams
 irs_treatment_timesteps <- irs_treatment_result$timesteps
 
-lsm_baseline_result <- set_lsm_parameters(baseline_simparams, lhs_sample, baseline = TRUE)
-baseline_simparams <- lsm_baseline_result$simparams
-lsm_baseline_timesteps <- lsm_baseline_result$timesteps
-
-lsm_treatment_result <- set_lsm_parameters(treatment_simparams, lhs_sample, baseline = FALSE)
+lsm_treatment_result <- set_lsm_parameters(treatment_simparams, lhs_sample)
 treatment_simparams <- lsm_treatment_result$simparams
 lsm_treatment_timesteps <- lsm_treatment_result$timesteps
 
-unique_bednet_timesteps <- unique(c(bednet_baseline_timesteps, bednet_treatment_timesteps))
-unique_irs_timesteps <- unique(c(irs_baseline_timesteps, irs_treatment_timesteps))
-unique_lsm_timesteps <- unique(c(lsm_baseline_timesteps, lsm_treatment_timesteps))
+unique_bednet_timesteps <- unique(bednet_treatment_timesteps)
+unique_irs_timesteps <- unique(irs_treatment_timesteps)
+unique_lsm_timesteps <- unique(lsm_treatment_timesteps)
 
 output <- list()
 
@@ -94,20 +82,18 @@ output$treatment_timesteps <- list(
   lsm = unique_lsm_timesteps
 )
 
-if (run_control) {
-    control_simulation_results <- run_control_sim(SIM_LENGTH, baseline_simparams)
-    output$control_simulation_results <- control_simulation_results
-}
-
 treatment_simulation_results <- run_sim_with_reps(
-  SIM_LENGTH, treatment_simparams, repetitions, parallel
-  )
+    timesteps = SIM_LENGTH, 
+    parameters = treatment_simparams, 
+    repetitions = repetitions, 
+    parallel = parallel, 
+    workers_override = workers_override
+)
 
 output$treatment_simulation_results <- treatment_simulation_results
 
 if (plot) {
   plot_simulations(output = output$treatment_simulation_results,
-  output_control =  output$control_simulation_results,
   timesteps = output$treatment_timesteps)
 }
 

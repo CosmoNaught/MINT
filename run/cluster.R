@@ -20,9 +20,10 @@ resources <- hipercow::hipercow_resources(cores = 5)
 id4 <- hipercow::task_create_expr(orderly2::orderly_run("simulation_prep",
 list(run = "long_run", 
 num_sample = 7008, 
-run_control = FALSE,
 repetitions = 5, 
 parallel = TRUE,
-plot = TRUE)),
+workers_override = FALSE,
+plot = TRUE),
+echo = FALSE),
 parallel = parallel,
 resources = resources)

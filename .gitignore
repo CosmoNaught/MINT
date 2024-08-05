@@ -4,6 +4,7 @@
 /hipercow/
 .DS_Store
 src/.DS_Store
+worker_log.txt
 
 # ---VVV--- added by orderly ---VVV----------------
 # Don't manually edit content between these markers
