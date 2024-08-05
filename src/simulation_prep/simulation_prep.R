@@ -1,7 +1,8 @@
 # Load necessary libraries
 library(malariasimulation)
 library(tibble)
-devtools::load_all("/home/ye120/net/malaria/Cosmo/spearMINT")
+library(spearMINT)
+# devtools::load_all("/home/ye120/net/malaria/Cosmo/spearMINT")
 
 # Source additional scripts
 source("set_inits.R")
@@ -26,8 +27,8 @@ HUMAN_POPULATION <- 100000
 orderly2::orderly_parameters(run = NULL,
 num_sample = NULL,
 run_control = NULL,
- parallel = NULL,
  repetitions = NULL,
+ parallel = NULL,
 plot = NULL)
 
 if(!run %in% c("short_run", "long_run")) {

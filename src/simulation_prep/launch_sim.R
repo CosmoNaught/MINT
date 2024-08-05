@@ -5,8 +5,10 @@ run_sim_with_reps <- function(
     parallel = FALSE
 ) {
   if (parallel) {
+    print("Repetition sequence: parallel")
     fapply <- parallel::mclapply
   } else {
+    print("Repetition sequence: sequential")
     fapply <- lapply
   }
   
@@ -14,7 +16,7 @@ run_sim_with_reps <- function(
   list_dfs <- fapply(
     seq(repetitions),
     function(repetition) {
-      df <- run_simulation(timesteps, parameters)
+      df <- malariasimulation::run_simulation(timesteps, parameters)
       df$repetition <- repetition
       return(df)
     }

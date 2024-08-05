@@ -1,5 +1,5 @@
+mrc-ide/malariasimulation
 mrc-ide/orderly2
-mrc-ide/malariasimulation@v1.6.0
 
 dplyr
 tidyr
