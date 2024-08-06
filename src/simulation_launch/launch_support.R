@@ -1,5 +1,6 @@
 library(malariasimulation)
 library(parallel)
+
 simulation_function <- function(repetition, timesteps, parameters) {
     start_time <- Sys.time()
     message <- paste("Starting simulation for repetition:", repetition, "at", start_time, "\n")
