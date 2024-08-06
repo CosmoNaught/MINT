@@ -2,7 +2,6 @@
 library(malariasimulation)
 library(tibble)
 library(spearMINT)
-# devtools::load_all("/home/ye120/net/malaria/Cosmo/spearMINT")
 
 # Source additional scripts
 source("set_inits.R")
@@ -27,7 +26,7 @@ HUMAN_POPULATION <- 100000
 orderly2::orderly_parameters(run = NULL,
     num_sample = NULL,
     repetitions = NULL,
-    parallel = NULL,
+    parallelism = NULL,
     workers_override = NULL,
     plot = NULL)
 
@@ -86,7 +85,7 @@ treatment_simulation_results <- run_sim_with_reps(
     timesteps = SIM_LENGTH, 
     parameters = treatment_simparams, 
     repetitions = repetitions, 
-    parallel = parallel, 
+    parallelism = parallelism, 
     workers_override = workers_override
 )
 
