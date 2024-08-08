@@ -27,6 +27,8 @@ input <- input[[parameter_set]]
 
 output <- list()
 
+print("Launching all repetitions...")
+sim_start_time <- Sys.time()
 treatment_simulation_results <- run_sim_with_reps(
     timesteps = input$timesteps, 
     parameters = input$parameters, 
@@ -34,6 +36,8 @@ treatment_simulation_results <- run_sim_with_reps(
     parallelism = parallelism, 
     workers_override = workers_override
 )
+sim_end_time <- Sys.time()
+print(paste("Duration for all repetitions:", difftime(sim_end_time, sim_start_time, units = "secs")))
 
 output$treatment_simulation_results <- treatment_simulation_results
 

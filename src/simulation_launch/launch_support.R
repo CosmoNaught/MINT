@@ -67,7 +67,6 @@ run_sim_with_reps <- function(
 
         clusterCall(cluster, function() {
             library(malariasimulation)
-            library(dplyr)
             TRUE  # Return TRUE to indicate successful execution
         })
 

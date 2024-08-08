@@ -36,10 +36,8 @@ id4 <- hipercow::task_create_expr(
 )
 
 ############################ Launch simulations ############################
-parallel <- hipercow::hipercow_parallel("parallel")
-resources <- hipercow::hipercow_resources(cores = 5)
 
-parameter_set_indices <- 1:3
+parameter_set_indices <- 10000
 
 for (i in parameter_set_indices) {
   simulation_launch <- orderly2::orderly_run(
@@ -56,8 +54,22 @@ for (i in parameter_set_indices) {
   )
 }
 
-id4 <- hipercow::task_create_expr(
-    simulation_launch,
-    parallel = parallel,
-    resources = resources
-)
+parameter_set_indices <- 1:10000
+for (i in parameter_set_indices) {
+    hipercow::task_create_expr(
+        orderly2::orderly_run(
+        "simulation_launch",
+        list(
+        run = "long_run",
+        parameter_set = i,
+        repetitions = 5,
+        parallelism = TRUE,
+        workers_override = FALSE,
+        plot = TRUE
+        ),
+        echo = FALSE
+    ),
+        #parallel = parallel,
+        resources = hipercow::hipercow_resources(cores = 5)
+    )
+}
