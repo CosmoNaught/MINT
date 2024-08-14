@@ -3,10 +3,10 @@ library(malariasimulation)
 library(tibble)
 library(spearMINT)
 
+# Load dependencies
 source("launch_support.R")
 source("debug_plot.R")
 
-# Load dependencies
 orderly2::orderly_parameters(run = NULL,
     parameter_set = NULL,
     repetitions = NULL,

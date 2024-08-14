@@ -11,4 +11,4 @@ reshape2
 foreach
 data.table
 
-CosmoNaught/spearMINT
+CosmoNaught/spearMINT@master
