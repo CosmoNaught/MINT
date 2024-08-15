@@ -84,7 +84,7 @@ for (i in parameter_set_indices) {
 
 ############################ Gather simulation IDs ############################
 
-parameter_set_indices <- 1:2
+parameter_set_indices <- 1:100
 parameter_set_indices <- paste(parameter_set_indices, collapse = ",")
 
 id6 <- hipercow::task_create_expr(

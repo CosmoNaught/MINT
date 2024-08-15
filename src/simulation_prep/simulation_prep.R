@@ -39,32 +39,6 @@ orderly2::orderly_dependency("param_sampling", "latest(parameter:run == this:run
 lhs_data <- data.table::fread("lhs_scenarios.csv")[1:subset_override, ]
 TOTAL_ROWS <- nrow(lhs_data)
 
-# Function to generate parameter names
-generate_param_name <- function(index) {
-  # Determine the "base" alphabet size
-  alphabet_size <- length(LETTERS)
-  
-  # Calculate which "block" the index is in
-  block <- (index %/% 1000)
-  
-  # Calculate the specific index within the current block
-  number <- index %% 1000
-  
-  # Calculate the letter sequence for the block
-  letter1 <- LETTERS[(block %% alphabet_size) + 1]
-  
-  # For multi-letter prefix (e.g., AA, AB, ... after Z)
-  letter2 <- ""
-  if (block >= alphabet_size) {
-    letter2 <- LETTERS[(block %/% alphabet_size)]
-  }
-  
-  # Combine letters and number
-  param_name <- paste0(letter2, letter1, number)
-  
-  return(param_name)
-}
-
 # Efficiently determine the number of rows
 cat("Total number of rows:", TOTAL_ROWS, "\n") # Debug statement
 
@@ -133,7 +107,7 @@ process_chunk <- function(chunk_index) {
     unique_lsm_timesteps <- unique(lsm_treatment_timesteps)
     
     # Generate the parameter name
-    param_name <- generate_param_name((chunk_index - 1) * chunk_size + i)
+    param_name <- spearMINT::generate_param_name((chunk_index - 1) * chunk_size + i)
     debug_messages <- c(debug_messages, paste("Generated parameter name:", param_name))
     cat("Generated parameter name:", param_name, "\n")
     flush.console()
