@@ -1,5 +1,6 @@
 mrc-ide/malariasimulation
 mrc-ide/orderly2
+mrc-ide/hipercow
 
 dplyr
 tidyr
@@ -12,3 +13,8 @@ foreach
 data.table
 
 CosmoNaught/spearMINT@master
+
+doParallel
+parallel
+pbapply
+tibble

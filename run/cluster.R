@@ -102,3 +102,21 @@ id6 <- hipercow::task_create_expr(
 )
 
 hipercow::task_log_watch(id6)
+
+
+############################ Process simulation IDs ############################
+
+orderly2::orderly_run(
+    "simulation_collate"
+)
+
+id7 <- hipercow::task_create_expr(
+    orderly2::orderly_run(
+        "simulation_collate",
+        echo = FALSE
+    ),
+    parallel = hipercow::hipercow_parallel("parallel"),
+    resources = hipercow::hipercow_resources(cores = 10)
+)
+
+hipercow::task_log_watch(id7)
