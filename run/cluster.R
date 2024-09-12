@@ -27,7 +27,7 @@ resources = hipercow::hipercow_resources(cores = 32))
 simulation_prep  <- orderly2::orderly_run("simulation_prep",
 list(run = "long_run", 
 chunk_size = 1000,
-subset_override = 10000),
+subset_override = 1000),
 echo = FALSE)
 
 ## Cluster
@@ -35,12 +35,11 @@ id4 <- hipercow::task_create_expr(
     orderly2::orderly_run("simulation_prep",
     list(run = "long_run", 
     chunk_size = 1000,
-    subset_override = 10000),
+    subset_override = 100000),
     echo = FALSE),
-    parallel = parallel,
-    resources = resources
+    resources = hipercow::hipercow_resources(cores = 10)
 )
-
+hipercow::task_log_watch(id4)
 ############################ Launch simulations ############################
 
 ## Local
@@ -62,7 +61,7 @@ for (i in parameter_set_indices) {
 }
 
 ## Cluster
-parameter_set_indices <- 1:10000
+parameter_set_indices <- 1:100000
 for (i in parameter_set_indices) {
     hipercow::task_create_expr(
         orderly2::orderly_run(
@@ -84,7 +83,7 @@ for (i in parameter_set_indices) {
 
 ############################ Gather simulation IDs ############################
 
-parameter_set_indices <- 1:100
+parameter_set_indices <- 1:100000
 parameter_set_indices <- paste(parameter_set_indices, collapse = ",")
 
 id6 <- hipercow::task_create_expr(
@@ -103,7 +102,6 @@ id6 <- hipercow::task_create_expr(
 
 hipercow::task_log_watch(id6)
 
-
 ############################ Process simulation IDs ############################
 
 orderly2::orderly_run(
@@ -120,3 +118,14 @@ id7 <- hipercow::task_create_expr(
 )
 
 hipercow::task_log_watch(id7)
+
+
+t1 <- Sys.time()
+system.time(fs::file_copy("draft/simulation_collate/20240820-161339-4d8b38e2/processed_outputs.RDS", "bar.RDS"))
+t2 <- as.difftime(Sys.time() - t1) 
+
+t1 <- Sys.time()
+orderly2::orderly_run(
+    "simulation_collate"
+)
+t2 <- as.difftime(Sys.time() - t1) 

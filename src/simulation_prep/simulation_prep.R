@@ -141,16 +141,56 @@ process_chunk <- function(chunk_index) {
 num_cores <- min(detectCores(), 10)  # Use up to 10 cores or the number of available cores
 cat("Using", num_cores, "cores for parallel processing\n") # Debug statement
 flush.console()
-cl <- makeCluster(num_cores)
+# cl <- makeCluster(num_cores)
 
-# Export necessary variables and functions to the cluster
-clusterExport(cl, c("YEAR", "SIM_LENGTH", "HUMAN_POPULATION", "chunk_size", "TOTAL_CHUNKS",
-                    "TOTAL_ROWS", "bednet_params", "generate_param_name", 
-                    "set_seasonality", "initialize_simulation_parameters", 
-                    "set_bednet_parameters", "set_irs_parameters", "set_lsm_parameters", 
-                    "lhs_data"))  # Ensure lhs_data is exported
+# # Export necessary variables and functions to the cluster
+# clusterExport(cl, c("YEAR", "SIM_LENGTH", "HUMAN_POPULATION", "chunk_size", "TOTAL_CHUNKS",
+#                     "TOTAL_ROWS", "bednet_params", "generate_param_name", 
+#                     "set_seasonality", "initialize_simulation_parameters", 
+#                     "set_bednet_parameters", "set_irs_parameters", "set_lsm_parameters", 
+#                     "lhs_data"))  # Ensure lhs_data is exported
 
-# Export required libraries to the cluster
+# # Export required libraries to the cluster
+# clusterEvalQ(cl, {
+#   library(tibble)
+#   library(malariasimulation)
+#   library(spearMINT)
+#   source("set_inits.R")
+#   source("set_species.R")
+#   source("set_seasonality.R")
+#   source("set_bednets.R")
+#   source("set_irs.R")
+#   source("set_lsm.R")
+#   cat("Worker ready for processing\n") # Debug statement
+#   flush.console()
+# })
+# Determine the number of cores to use
+cores <- num_cores
+
+# Create a cluster with the specified number of cores
+cluster_creation_start <- Sys.time()
+print(paste("Creating cluster at", cluster_creation_start))
+
+cl <- makeCluster(cores, outfile = "worker_log.txt")
+
+cluster_creation_end <- Sys.time()
+print(paste("Cluster created at", cluster_creation_end))
+print(paste("Cluster creation duration:", difftime(cluster_creation_end, cluster_creation_start, units = "secs")))
+
+# Set the library paths on each cluster worker
+print("Setting library paths on cluster workers...")
+lib_paths_start <- Sys.time()
+
+clusterCall(cl, ".libPaths", .libPaths())
+
+lib_paths_end <- Sys.time()
+print(paste("Library paths set at", lib_paths_end))
+print(paste("Library paths duration:", difftime(lib_paths_end, lib_paths_start, units = "secs")))
+
+# Load necessary libraries and source files on each cluster worker
+print("Loading libraries and source files on cluster workers...")
+load_libraries_start <- Sys.time()
+
 clusterEvalQ(cl, {
   library(tibble)
   library(malariasimulation)
@@ -164,6 +204,24 @@ clusterEvalQ(cl, {
   cat("Worker ready for processing\n") # Debug statement
   flush.console()
 })
+
+load_libraries_end <- Sys.time()
+print(paste("Libraries and source files loaded at", load_libraries_end))
+print(paste("Libraries and source files loading duration:", difftime(load_libraries_end, load_libraries_start, units = "secs")))
+
+# Export the necessary variables and functions to the cluster
+print("Exporting variables to cluster workers...")
+export_vars_start <- Sys.time()
+
+clusterExport(cl, varlist = c("YEAR", "SIM_LENGTH", "HUMAN_POPULATION", "chunk_size", "TOTAL_CHUNKS",
+                              "TOTAL_ROWS", "bednet_params", "generate_param_name", 
+                              "set_seasonality", "initialize_simulation_parameters", 
+                              "set_bednet_parameters", "set_irs_parameters", "set_lsm_parameters", 
+                              "lhs_data"), envir = environment())
+
+export_vars_end <- Sys.time()
+print(paste("Variables exported at", export_vars_end))
+print(paste("Variable export duration:", difftime(export_vars_end, export_vars_start, units = "secs")))
 
 cat("Beginning Processing using parLapply\n")
 flush.console()
