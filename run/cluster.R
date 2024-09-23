@@ -6,15 +6,15 @@ hipercow::hipercow_configuration()
 ############################ Launch bednet parameter collator ############################
 
 id1 <- hipercow::task_create_expr(orderly2::orderly_run("collate_bednet_param"))
+hipercow::task_log_watch(id1)
 
 ############################ Launch parameter space explorer ############################
 
 id2 <- hipercow::task_create_expr(orderly2::orderly_run("param_sampling", 
 list(run = "long_run",
 local_cluster = FALSE)),
-parallel = hipercow::hipercow_parallel("parallel"),
 resources = hipercow::hipercow_resources(cores = 32))
-
+hipercow::task_log_watch(id2)
 
 ############################ Plot parameter space ############################
 
