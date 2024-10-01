@@ -1,3 +1,9 @@
+################################################################################
+## There is a lot of crap in this script because there was a large
+## bug hunting operation, would you like to know more? Let me know I can explain
+## but for now this will remain as it is as de-cluttering this will be a mission
+################################################################################
+
 library(malariasimulation)
 library(parallel)
 
