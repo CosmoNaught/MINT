@@ -24,8 +24,14 @@ hipercow::task_log_watch(id2)
 ############################ Launch simulation setup ############################
 
 ## Local
+init_param_idx <- 1
+parameter_set <- 2
+reps <- 1
 simulation_prep  <- orderly2::orderly_run("simulation_prep",
-list(run = "long_run", i = 1))
+list(run = "long_run",init_param_idx = init_param_idx,
+                parameter_set = parameter_set,
+                reps = reps,
+                rrq = FALSE))
 
 ## Cluster
 id4 <- hipercow::task_create_expr(
@@ -38,9 +44,9 @@ hipercow::task_log_watch(id4)
 ############################ Launch simulations ############################
 
 # Local
+init_param_idx <- 1
 parameter_set <- 2
-parameter_set <- 1024
-reps <- 2
+reps <- 4 
 
 orderly2::orderly_run(
         "simulation_launch",

@@ -15,3 +15,4 @@ doParallel
 parallel
 pbapply
 tibble
+arrow
