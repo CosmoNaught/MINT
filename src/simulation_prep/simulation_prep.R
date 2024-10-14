@@ -21,7 +21,7 @@ SIM_LENGTH <- 12 * YEAR
 HUMAN_POPULATION <- 100000
 
 # Load dependencies
-orderly2::orderly_parameters(run = NULL, chunk_size = NULL, subset_override = NULL)
+orderly2::orderly_parameters(run = NULL, chunk_size = NULL, start_idx = NULL, subset_override = NULL)
 
 if (!run %in% c("short_run", "long_run")) {
   stop(paste0("Please provide either 'short_run' or 'long_run' as query, provided: ", run))
@@ -36,7 +36,7 @@ orderly2::orderly_dependency("param_sampling", "latest(parameter:run == this:run
                              c("lhs_scenarios.csv" = "lhs_scenarios.csv"))
 
 # Load the entire dataset before parallel processing
-lhs_data <- data.table::fread("lhs_scenarios.csv")[1:subset_override, ]
+lhs_data <- data.table::fread("lhs_scenarios.csv")[start_idx:subset_override, ]
 TOTAL_ROWS <- nrow(lhs_data)
 
 # Efficiently determine the number of rows
@@ -141,29 +141,7 @@ process_chunk <- function(chunk_index) {
 num_cores <- min(detectCores(), 10)  # Use up to 10 cores or the number of available cores
 cat("Using", num_cores, "cores for parallel processing\n") # Debug statement
 flush.console()
-# cl <- makeCluster(num_cores)
 
-# # Export necessary variables and functions to the cluster
-# clusterExport(cl, c("YEAR", "SIM_LENGTH", "HUMAN_POPULATION", "chunk_size", "TOTAL_CHUNKS",
-#                     "TOTAL_ROWS", "bednet_params", "generate_param_name", 
-#                     "set_seasonality", "initialize_simulation_parameters", 
-#                     "set_bednet_parameters", "set_irs_parameters", "set_lsm_parameters", 
-#                     "lhs_data"))  # Ensure lhs_data is exported
-
-# # Export required libraries to the cluster
-# clusterEvalQ(cl, {
-#   library(tibble)
-#   library(malariasimulation)
-#   library(spearMINT)
-#   source("set_inits.R")
-#   source("set_species.R")
-#   source("set_seasonality.R")
-#   source("set_bednets.R")
-#   source("set_irs.R")
-#   source("set_lsm.R")
-#   cat("Worker ready for processing\n") # Debug statement
-#   flush.console()
-# })
 # Determine the number of cores to use
 cores <- num_cores
 

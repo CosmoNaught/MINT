@@ -1,4 +1,4 @@
-mrc-ide/malariasimulation
+mrc-ide/malariasimulation@v2.0.0
 mrc-ide/orderly2
 mrc-ide/hipercow
 dplyr

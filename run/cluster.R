@@ -26,106 +26,73 @@ hipercow::task_log_watch(id2)
 ## Local
 simulation_prep  <- orderly2::orderly_run("simulation_prep",
 list(run = "long_run", 
-chunk_size = 1000,
-subset_override = 1000),
+chunk_size = 8,
+start_idx = 1,
+subset_override = 128),
 echo = FALSE)
 
-## Cluster
+## Cluster (Need to run 16 of these...)
 id4 <- hipercow::task_create_expr(
     orderly2::orderly_run("simulation_prep",
     list(run = "long_run", 
-    chunk_size = 1000,
-    subset_override = 100000),
+    chunk_size = 1024,
+    start_idx = 1,
+    subset_override = 65536),
     echo = FALSE),
-    resources = hipercow::hipercow_resources(cores = 10)
+    resources = hipercow::hipercow_resources(cores = 16)
 )
 hipercow::task_log_watch(id4)
+
 ############################ Launch simulations ############################
 
-## Local
-parameter_set_indices <- 10000
+# Local
+parameter_set <- 2
+parameter_set <- 1024
+reps <- 2
 
-for (i in parameter_set_indices) {
-  simulation_launch <- orderly2::orderly_run(
-    "simulation_launch",
-    list(
-      run = "long_run",
-      parameter_set = i,
-      repetitions = 5,
-      parallelism = TRUE,
-      workers_override = FALSE,
-      plot = TRUE
-    ),
-    echo = FALSE
-  )
-}
-
-## Cluster
-parameter_set_indices <- 1:100000
-for (i in parameter_set_indices) {
-    hipercow::task_create_expr(
-        orderly2::orderly_run(
+orderly2::orderly_run(
         "simulation_launch",
         list(
-        run = "long_run",
-        parameter_set = i,
-        repetitions = 5,
-        parallelism = TRUE,
-        workers_override = FALSE,
-        plot = TRUE
-        ),
-        echo = FALSE
-    ),
-        #parallel = parallel,
-        resources = hipercow::hipercow_resources(cores = 5)
+            run = "long_run",
+            init_param_idx = init_param_idx,
+            parameter_set = parameter_set,
+            reps = reps,
+            rrq = FALSE
+        )
     )
+
+# Cluster
+r <- hipercow::hipercow_rrq_controller()
+
+launch_ids <- list()
+
+for (batch in 1:64) {
+    init_param_idx <- ((batch - 1) * 1024) + 1
+    parameter_set <- batch * 1024
+    
+    launch_id <- hipercow::task_create_expr({
+        orderly2::orderly_run(
+            "simulation_launch",
+            list(
+                run = "long_run",
+                init_param_idx = init_param_idx,
+                parameter_set = parameter_set,
+                reps = reps,
+                rrq = TRUE
+            )
+        )
+    },
+    parallel = hipercow::hipercow_parallel(use_rrq = TRUE),
+    envvars = hipercow::hipercow_envvars(HIPERCOW_RRQ_QUEUE_ID = r$queue_id)
+    )
+    
+    launch_ids[[batch]] <- launch_id
 }
 
-############################ Gather simulation IDs ############################
+info <- hipercow::hipercow_rrq_workers_submit(512)
 
-parameter_set_indices <- 1:100000
-parameter_set_indices <- paste(parameter_set_indices, collapse = ",")
-
-id6 <- hipercow::task_create_expr(
-    orderly2::orderly_run(
-        "pre_collate",
-        list(
-            indices = parameter_set_indices,
-            verbose = TRUE,
-            parallel = TRUE,
-            store_output = TRUE
-        ),
-        echo = FALSE
-    ),
-    resources = hipercow::hipercow_resources(cores = 2)
-)
-
-hipercow::task_log_watch(id6)
-
-############################ Process simulation IDs ############################
+############################ Plotting Simulation ##################
 
 orderly2::orderly_run(
-    "simulation_collate"
-)
-
-id7 <- hipercow::task_create_expr(
-    orderly2::orderly_run(
-        "simulation_collate",
-        echo = FALSE
-    ),
-    parallel = hipercow::hipercow_parallel("parallel"),
-    resources = hipercow::hipercow_resources(cores = 10)
-)
-
-hipercow::task_log_watch(id7)
-
-
-t1 <- Sys.time()
-system.time(fs::file_copy("draft/simulation_collate/20240820-161339-4d8b38e2/processed_outputs.RDS", "bar.RDS"))
-t2 <- as.difftime(Sys.time() - t1) 
-
-t1 <- Sys.time()
-orderly2::orderly_run(
-    "simulation_collate"
-)
-t2 <- as.difftime(Sys.time() - t1) 
+        "simulation_plots"
+    )

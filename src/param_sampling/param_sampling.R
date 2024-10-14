@@ -19,9 +19,9 @@ if(run == "short_run"){
   sample_prop = 0.1
   subset_samples = 1000
 } else if(run == "long_run"){
-  total_samples = 1000000
+  total_samples = 1048576
   sample_prop = 0.1
-  subset_samples = 10000
+  subset_samples = 8192
 } else {
   stop(paste0("Please provide either 'short_run' or 'long_run' as query, provided: "), run)
 }
@@ -32,7 +32,7 @@ orderly2::orderly_dependency("collate_bednet_param", "latest()", c("bednet_param
 bednet_params_raw <- readRDS("bednet_params_raw.RDS")
 
 # Define parameter ranges
-eir_range <- sort(10^(runif(16, log10(0.5), log10(300))))
+eir_range <- sort(10^(runif(16, log10(0.5), log10(500))))
 dn0_min_non_zero <- min(bednet_params_raw$dn0[bednet_params_raw$dn0 > 0]) * 0.9
 dn0_max <- max(bednet_params_raw$dn0) * 1.2
 dn0_range <- sort(runif(10, dn0_min_non_zero, dn0_max))
