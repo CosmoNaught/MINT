@@ -25,21 +25,13 @@ hipercow::task_log_watch(id2)
 
 ## Local
 simulation_prep  <- orderly2::orderly_run("simulation_prep",
-list(run = "long_run", 
-chunk_size = 8,
-start_idx = 1,
-subset_override = 128),
-echo = FALSE)
+list(run = "long_run", i = 1))
 
-## Cluster (Need to run 16 of these...)
+## Cluster
 id4 <- hipercow::task_create_expr(
     orderly2::orderly_run("simulation_prep",
-    list(run = "long_run", 
-    chunk_size = 1024,
-    start_idx = 1,
-    subset_override = 65536),
-    echo = FALSE),
-    resources = hipercow::hipercow_resources(cores = 16)
+    list(run = "long_run", i = 1)),
+    resources = hipercow::hipercow_resources(cores = 1)
 )
 hipercow::task_log_watch(id4)
 
