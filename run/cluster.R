@@ -26,7 +26,8 @@ hipercow::task_log_watch(id2)
 ## Local
 init_param_idx <- 1
 parameter_set <- 2
-reps <- 1
+reps <- 4 
+
 simulation_prep  <- orderly2::orderly_run("simulation_prep",
 list(run = "long_run",init_param_idx = init_param_idx,
                 parameter_set = parameter_set,
