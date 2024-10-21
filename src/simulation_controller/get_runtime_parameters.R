@@ -1,5 +1,4 @@
-generate_parameters <- function(i, lhs_data, HUMAN_POPULATION, bednet_params, SIM_LENGTH) {
-  
+get_runtime_parameters <- function(i, lhs_data, HUMAN_POPULATION, bednet_params, SIM_LENGTH) {
   # Extract lhs_sample for the given index
   lhs_sample <- lhs_data[i, ]
   
@@ -27,31 +26,15 @@ generate_parameters <- function(i, lhs_data, HUMAN_POPULATION, bednet_params, SI
   unique_irs_timesteps <- unique(irs_treatment_timesteps)
   unique_lsm_timesteps <- unique(lsm_treatment_timesteps)
   
-#   # Generate the parameter name
-#   param_name <- spearMINT::generate_param_name(i)
-  
-#   # Create input with the specific param_name
-#   input_entry <- list()
-  
-#   input_entry[[paste0("input", param_name)]] <- list(
-#     MINT_parameters = lhs_sample,
-#     timesteps = SIM_LENGTH,
-#     parameters = treatment_simparams,
-#     treatment_timesteps = list(
-#       mass_bednet = c(0, 3, 6, 9) * 365,
-#       irs = unique_irs_timesteps,
-#       lsm = unique_lsm_timesteps
-#     )
-#   )
-input_entry <- list(
-    MINT_parameters = lhs_sample,
-    timesteps = SIM_LENGTH,
-    parameters = treatment_simparams,
-    treatment_timesteps = list(
-      mass_bednet = c(0, 3, 6, 9) * 365,
-      irs = unique_irs_timesteps,
-      lsm = unique_lsm_timesteps
+  input_entry <- list(
+      MINT_parameters = lhs_sample,
+      timesteps = SIM_LENGTH,
+      parameters = treatment_simparams,
+      treatment_timesteps = list(
+        mass_bednet = c(0, 3, 6, 9) * 365,
+        irs = unique_irs_timesteps,
+        lsm = unique_lsm_timesteps
+      )
     )
-  )
   return(input_entry)
 }

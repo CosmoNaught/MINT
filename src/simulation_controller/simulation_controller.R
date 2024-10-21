@@ -13,7 +13,7 @@ source("set_seasonality.R")
 source("set_bednets.R")
 source("set_irs.R")
 source("set_lsm.R")
-source("generate_parameters.R")
+source("get_runtime_parameters.R")
 
 # Set seed for reproducibility
 set.seed(123)
@@ -47,7 +47,7 @@ output <- list()
 task_ids <- list()
 
 for (i in seq(init_param_idx, parameter_set)) {
-  input <- generate_parameters(
+  input <- get_runtime_parameters(
                                i,
                                lhs_data,
                                HUMAN_POPULATION,
@@ -55,7 +55,6 @@ for (i in seq(init_param_idx, parameter_set)) {
                                SIM_LENGTH)
 
   parameter_set_output <- list()
-  parameter_set_output$MINT_parameters <- input$MINT_parameters
   parameter_set_output$input <- input
   if (rrq) {
     ids <- rrq::rrq_task_create_bulk_call(
@@ -110,7 +109,6 @@ if (rrq) {
   counter <- 1
   for (i in seq(init_param_idx, parameter_set)) {
     parameter_set_output <- list()
-    parameter_set_output$MINT_parameters <- input_entry[[i]]$MINT_parameters
     parameter_set_output$input <- input_entry[[i]]
     for (j in seq_len(reps)) {
       parameter_set_output[[paste0("rep_", j)]] <- list(
@@ -123,3 +121,32 @@ if (rrq) {
 }
 
 saveRDS(output, file = "simulation_results.rds")
+
+
+# # Two tibbles
+# # 1. parameter_set_X$input (input contains $MINT_parameters, $... malariasim stuff)
+# # 2. parameter_set_X, rep, time series results
+
+library(dplyr)
+library(purrr)
+
+# Generate the tibble, excluding $input and focusing only on $result
+final_tibble <- bind_rows(
+  lapply(names(tst), function(param_set) {
+    # Filter out any non-rep elements (e.g., $input) using only rep_Y levels
+    reps <- names(tst[[param_set]])
+    reps <- reps[grep("^rep_", reps)]  # Only select rep levels
+
+    # Loop through the reps and extract results
+    bind_rows(
+      lapply(reps, function(rep) {
+        tibble(
+          parameter_set = param_set,
+          repetition = rep,
+          result = tst[[param_set]][[rep]]$result  # Extracting only the result
+        )
+      })
+    )
+  })
+)
+
