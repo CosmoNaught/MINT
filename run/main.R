@@ -23,20 +23,27 @@ hipercow::task_log_watch(id2)
 
 ############################ Launch simulation setup ############################
 
-## Local
-init_param_idx <- 1
-parameter_set <- 2
-reps <- 4 
+library(tibble)
+library(dplyr)
 
-simulation_prep  <- orderly2::orderly_run("simulation_controller",
-list(run = "long_run",init_param_idx = init_param_idx,
-                parameter_set = parameter_set,
-                reps = reps,
-                rrq = FALSE))
-# Cluster
-init_param_idx <- 1
+## Local
 parameter_set <- 2
-reps <- 8
+reps <- 2
+task_id <- tibble()
+
+for (i in seq(1, parameter_set)){
+    simulation_prep  <- orderly2::orderly_run("simulation_controller",
+    list(run = "long_run",
+                    parameter_set = parameter_set,
+                    reps = reps,
+                    rrq = FALSE))
+    temp_tibble <- tibble(parameter_set = i, output = simulation_prep)
+    task_id <- bind_rows(task_id, temp_tibble)
+}
+
+# Cluster
+parameter_set <- 1
+reps <- 4
 
 r <- hipercow::hipercow_rrq_controller()
     
@@ -45,7 +52,6 @@ launch_id <- hipercow::task_create_expr({
         "simulation_controller",
         list(
             run = "long_run",
-            init_param_idx = init_param_idx,
             parameter_set = parameter_set,
             reps = reps,
             rrq = TRUE
@@ -63,3 +69,19 @@ info <- hipercow::hipercow_rrq_workers_submit(4)
 orderly2::orderly_run(
         "simulation_plots"
     )
+
+
+####################################################################
+
+load_simulation_results <- function(task_id) {
+  base_dir <- "/home/ye120/net/malaria/Cosmo/MINT/archive/simulation_controller"
+  file_path <- file.path(base_dir, task_id, "simulation_results.rds")
+  
+  if (!file.exists(file_path)) {
+    stop("The specified task ID does not exist or the file could not be found: ", file_path)
+  }
+  
+  simulation_results <- readRDS(file_path)
+  
+  return(simulation_results)
+}

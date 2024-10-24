@@ -24,7 +24,7 @@ SIM_LENGTH <- 12 * YEAR
 HUMAN_POPULATION <- 100000
 
 # Load dependencies
-orderly2::orderly_parameters(run = NULL, init_param_idx = NULL,
+orderly2::orderly_parameters(run = NULL,
                 parameter_set = NULL,
                 reps = NULL,
                 rrq = NULL)
@@ -46,107 +46,95 @@ lhs_data <- data.table::fread("lhs_scenarios.csv")
 output <- list()
 task_ids <- list()
 
-for (i in seq(init_param_idx, parameter_set)) {
-  input <- get_runtime_parameters(
-                               i,
-                               lhs_data,
-                               HUMAN_POPULATION,
-                               bednet_params,
-                               SIM_LENGTH)
+input <- get_runtime_parameters(
+                              parameter_set,
+                              lhs_data,
+                              HUMAN_POPULATION,
+                              bednet_params,
+                              SIM_LENGTH)
 
-  parameter_set_output <- list()
-  parameter_set_output$input <- input
-  if (rrq) {
-    ids <- rrq::rrq_task_create_bulk_call(
-      function(k, input) {
-        result <- malariasimulation::run_simulation(
-          input$timesteps,
-          input$parameters
-        )
-        return(list(result = result))
-      },
-      seq_len(reps),
-      args = list(input = input)
-    )
-    
-    task_ids[[i]] <- ids
-
-  } else {
-    cl <- parallel::makeCluster(max(1, (parameter_set * reps) - 1))
-    
-    parallel::clusterEvalQ(cl, {
-      library(malariasimulation)
-    })
-    
-    parallel::clusterExport(cl, c("input"))
-
-    task_fun <- function(k, input) {
-
+parameter_set_output <- list()
+parameter_set_output$input <- input
+parameter_set_output$input$parameters <- NULL
+if (rrq) {
+  ids <- rrq::rrq_task_create_bulk_call(
+    function(k, input) {
+      # Run the simulation
       result <- malariasimulation::run_simulation(
         input$timesteps,
         input$parameters
       )
-      return(list(result = result))
-    }
-    results <- parallel::parLapply(cl, seq_len(reps), task_fun, input = input)
-    parallel::stopCluster(cl)
+      
+      # Define and create the offload directory
+      offload_dir <- file.path(hipercow:::hipercow_root()$path$root, "offload")
+      dir.create(offload_dir, recursive = TRUE, showWarnings = FALSE)
+      print(paste("Offload dir in rrq task:", offload_dir))
+      
+      # Save the result to a temporary file in the offload directory
+      f <- tempfile(tmpdir = offload_dir)
+      saveRDS(result, f)
+      
+      # Return the basename of the file
+      return(basename(f))
+    },
+    seq_len(reps),
+    args = list(input = input)
+  )
+  
+  task_ids <- ids
 
-    for (j in seq_len(reps)) {
-      parameter_set_output[[paste0("rep_", j)]] <- list(
-        result = results[[j]]$result
-      )
-    }
+} else {
+  cl <- parallel::makeCluster(max(1, reps - 1))
+  
+  parallel::clusterEvalQ(cl, {
+    library(malariasimulation)
+  })
+  
+  parallel::clusterExport(cl, c("input"))
 
-    output[[paste0("parameter_set_", i)]] <- parameter_set_output
+  task_fun <- function(k, input) {
+
+    result <- malariasimulation::run_simulation(
+      input$timesteps,
+      input$parameters
+    )
+    return(list(result = result))
   }
+  results <- parallel::parLapply(cl, seq_len(reps), task_fun, input = input)
+  parallel::stopCluster(cl)
+
+  for (j in seq_len(reps)) {
+    parameter_set_output[[paste0("rep_", j)]] <- list(
+      result = results[[j]]$result
+    )
+  }
+
+  output <- parameter_set_output
 }
+
 if (rrq) {
   all_ids <- unlist(task_ids)
-  
+
   rrq::rrq_task_wait(all_ids)
+
   all_results <- rrq::rrq_task_results(all_ids)
-  
-  counter <- 1
-  for (i in seq(init_param_idx, parameter_set)) {
-    parameter_set_output <- list()
-    parameter_set_output$input <- input_entry[[i]]
-    for (j in seq_len(reps)) {
-      parameter_set_output[[paste0("rep_", j)]] <- list(
-        result = all_results[[counter]]$result
-      )
-      counter <- counter + 1
-    }
-    output[[paste0("parameter_set_", i)]] <- parameter_set_output
-  }
-}
 
-saveRDS(output, file = "simulation_results.rds")
+  parameter_set_output <- list()
+  parameter_set_output$input <- input
+  parameter_set_output$input$parameters <- NULL
 
+  for (j in seq_len(reps)) {
+    filename <- all_results[[j]]
 
-# # Two tibbles
-# # 1. parameter_set_X$input (input contains $MINT_parameters, $... malariasim stuff)
-# # 2. parameter_set_X, rep, time series results
+    result_path <- file.path(offload_dir, filename)
 
-library(dplyr)
-library(purrr)
+    result <- readRDS(result_path)
 
-# Generate the tibble, excluding $input and focusing only on $result
-final_tibble <- bind_rows(
-  lapply(names(tst), function(param_set) {
-    # Filter out any non-rep elements (e.g., $input) using only rep_Y levels
-    reps <- names(tst[[param_set]])
-    reps <- reps[grep("^rep_", reps)]  # Only select rep levels
-
-    # Loop through the reps and extract results
-    bind_rows(
-      lapply(reps, function(rep) {
-        tibble(
-          parameter_set = param_set,
-          repetition = rep,
-          result = tst[[param_set]][[rep]]$result  # Extracting only the result
-        )
-      })
+    parameter_set_output[[paste0("rep_", j)]] <- list(
+      result = result
     )
-  })
-)
+  }
 
+  output <- parameter_set_output
+}
+saveRDS(output, file = "simulation_results.rds")
