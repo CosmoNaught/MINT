@@ -2,6 +2,7 @@
 /archive/
 /draft/
 /hipercow/
+/offload/
 .DS_Store
 src/.DS_Store
 worker_log.txt

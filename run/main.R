@@ -42,27 +42,56 @@ for (i in seq(1, parameter_set)){
 }
 
 # Cluster
-parameter_set <- 1
-reps <- 4
+library(tibble)
+library(dplyr)
+parameter_set <- 4
+reps <- 8
+
+task_id <- tibble()
 
 r <- hipercow::hipercow_rrq_controller()
-    
-launch_id <- hipercow::task_create_expr({
-    orderly2::orderly_run(
-        "simulation_controller",
-        list(
-            run = "long_run",
-            parameter_set = parameter_set,
-            reps = reps,
-            rrq = TRUE
-        )
-    )
-},
-parallel = hipercow::hipercow_parallel(use_rrq = TRUE),
-envvars = hipercow::hipercow_envvars(HIPERCOW_RRQ_QUEUE_ID = r$queue_id)
-)
 
-info <- hipercow::hipercow_rrq_workers_submit(4)
+for (i in seq(1, parameter_set)){
+    simulation_prep <- hipercow::task_create_expr({
+        orderly2::orderly_run(
+            "simulation_controller",
+            list(
+                run = "long_run",
+                parameter_set = parameter_set,
+                reps = reps,
+                rrq = TRUE
+            )
+        )
+    },
+    parallel = hipercow::hipercow_parallel(use_rrq = TRUE),
+    envvars = hipercow::hipercow_envvars(HIPERCOW_RRQ_QUEUE_ID = r$queue_id)
+    )
+    temp_tibble <- tibble(parameter_set = i, output = simulation_prep)
+    task_id <- bind_rows(task_id, temp_tibble)
+}
+
+info <- hipercow::hipercow_rrq_workers_submit(32)
+
+unlink(paste0(getwd(),"/offload/"), recursive = TRUE)
+
+# r <- hipercow::hipercow_rrq_controller()
+    
+# launch_id <- hipercow::task_create_expr({
+#     orderly2::orderly_run(
+#         "simulation_controller",
+#         list(
+#             run = "long_run",
+#             parameter_set = parameter_set,
+#             reps = reps,
+#             rrq = TRUE
+#         )
+#     )
+# },
+# parallel = hipercow::hipercow_parallel(use_rrq = TRUE),
+# envvars = hipercow::hipercow_envvars(HIPERCOW_RRQ_QUEUE_ID = r$queue_id)
+# )
+
+# info <- hipercow::hipercow_rrq_workers_submit(4)
 
 ############################ Plotting Simulation ##################
 

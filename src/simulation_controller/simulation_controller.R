@@ -25,9 +25,9 @@ HUMAN_POPULATION <- 100000
 
 # Load dependencies
 orderly2::orderly_parameters(run = NULL,
-                parameter_set = NULL,
-                reps = NULL,
-                rrq = NULL)
+                             parameter_set = NULL,
+                             reps = NULL,
+                             rrq = NULL)
 
 if (!run %in% c("short_run", "long_run")) {
   stop(paste0("Please provide either 'short_run' or 'long_run' as query, provided: ", run))
@@ -43,38 +43,40 @@ orderly2::orderly_dependency("param_sampling", "latest(parameter:run == this:run
 
 lhs_data <- data.table::fread("lhs_scenarios.csv")
 
+# Set up offload directory and create it
+offload_dir <- file.path(hipercow:::hipercow_root()$path$root, "offload")
+dir.create(offload_dir, recursive = TRUE)
+print(paste("Offload directory is:", offload_dir))
+
 output <- list()
 task_ids <- list()
 
 input <- get_runtime_parameters(
-                              parameter_set,
-                              lhs_data,
-                              HUMAN_POPULATION,
-                              bednet_params,
-                              SIM_LENGTH)
+  parameter_set,
+  lhs_data,
+  HUMAN_POPULATION,
+  bednet_params,
+  SIM_LENGTH
+)
 
 parameter_set_output <- list()
 parameter_set_output$input <- input
 parameter_set_output$input$parameters <- NULL
+
 if (rrq) {
   ids <- rrq::rrq_task_create_bulk_call(
     function(k, input) {
-      # Run the simulation
+      # Set up offload directory and create it
+      offload_dir <- file.path(hipercow:::hipercow_root()$path$root, "offload")
+      dir.create(offload_dir, recursive = TRUE)
+      print(paste("Offload directory is:", offload_dir))
+      
       result <- malariasimulation::run_simulation(
         input$timesteps,
         input$parameters
       )
-      
-      # Define and create the offload directory
-      offload_dir <- file.path(hipercow:::hipercow_root()$path$root, "offload")
-      dir.create(offload_dir, recursive = TRUE, showWarnings = FALSE)
-      print(paste("Offload dir in rrq task:", offload_dir))
-      
-      # Save the result to a temporary file in the offload directory
       f <- tempfile(tmpdir = offload_dir)
       saveRDS(result, f)
-      
-      # Return the basename of the file
       return(basename(f))
     },
     seq_len(reps),
@@ -82,7 +84,7 @@ if (rrq) {
   )
   
   task_ids <- ids
-
+  
 } else {
   cl <- parallel::makeCluster(max(1, reps - 1))
   
@@ -91,50 +93,46 @@ if (rrq) {
   })
   
   parallel::clusterExport(cl, c("input"))
-
+  
   task_fun <- function(k, input) {
-
     result <- malariasimulation::run_simulation(
       input$timesteps,
       input$parameters
     )
     return(list(result = result))
   }
+  
   results <- parallel::parLapply(cl, seq_len(reps), task_fun, input = input)
   parallel::stopCluster(cl)
-
+  
   for (j in seq_len(reps)) {
     parameter_set_output[[paste0("rep_", j)]] <- list(
       result = results[[j]]$result
     )
   }
-
+  
   output <- parameter_set_output
 }
 
 if (rrq) {
   all_ids <- unlist(task_ids)
-
+  
   rrq::rrq_task_wait(all_ids)
-
   all_results <- rrq::rrq_task_results(all_ids)
-
+  
   parameter_set_output <- list()
   parameter_set_output$input <- input
   parameter_set_output$input$parameters <- NULL
-
+  
   for (j in seq_len(reps)) {
-    filename <- all_results[[j]]
-
-    result_path <- file.path(offload_dir, filename)
-
-    result <- readRDS(result_path)
-
+    result_filename <- all_results[[j]]
+    result <- readRDS(file.path(offload_dir, result_filename))
     parameter_set_output[[paste0("rep_", j)]] <- list(
       result = result
     )
   }
-
+  
   output <- parameter_set_output
 }
+
 saveRDS(output, file = "simulation_results.rds")
