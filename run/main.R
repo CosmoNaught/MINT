@@ -52,8 +52,8 @@ task_id <- tibble()
 r <- hipercow::hipercow_rrq_controller()
 
 for (i in seq(1, parameter_set)){
-    simulation_prep <- hipercow::task_create_expr({
-        orderly2::orderly_run(
+    hipercow::task_create_expr({
+            controller_id <- orderly2::orderly_run(
             "simulation_controller",
             list(
                 run = "long_run",
@@ -66,7 +66,7 @@ for (i in seq(1, parameter_set)){
     parallel = hipercow::hipercow_parallel(use_rrq = TRUE),
     envvars = hipercow::hipercow_envvars(HIPERCOW_RRQ_QUEUE_ID = r$queue_id)
     )
-    temp_tibble <- tibble(parameter_set = i, output = simulation_prep)
+    temp_tibble <- tibble(parameter_set = i, output = controller_id)
     task_id <- bind_rows(task_id, temp_tibble)
 }
 
@@ -74,24 +74,44 @@ info <- hipercow::hipercow_rrq_workers_submit(32)
 
 unlink(paste0(getwd(),"/offload/"), recursive = TRUE)
 
-# r <- hipercow::hipercow_rrq_controller()
-    
-# launch_id <- hipercow::task_create_expr({
-#     orderly2::orderly_run(
-#         "simulation_controller",
-#         list(
-#             run = "long_run",
-#             parameter_set = parameter_set,
-#             reps = reps,
-#             rrq = TRUE
-#         )
-#     )
-# },
-# parallel = hipercow::hipercow_parallel(use_rrq = TRUE),
-# envvars = hipercow::hipercow_envvars(HIPERCOW_RRQ_QUEUE_ID = r$queue_id)
-# )
 
-# info <- hipercow::hipercow_rrq_workers_submit(4)
+###############################
+# Cluster Debug
+library(tibble)
+library(dplyr)
+parameter_set <- 2
+reps <- 2
+
+task_id <- tibble(parameter_set = integer(), output = character())
+
+r <- hipercow::hipercow_rrq_controller()
+
+launch_controller <- function(){
+    controller_id <- orderly2::orderly_run(
+            "simulation_controller",
+            list(
+                run = "long_run",
+                parameter_set = parameter_set,
+                reps = reps,
+                rrq = TRUE
+            )
+        )
+    return(controller_id)
+}
+
+for (i in seq(1, parameter_set)){
+    hipercow::task_create_expr({
+        controller_id <- launch_controller()
+    },
+    parallel = hipercow::hipercow_parallel(use_rrq = TRUE),
+    envvars = hipercow::hipercow_envvars(HIPERCOW_RRQ_QUEUE_ID = r$queue_id)
+    )
+    temp_tibble <- tibble(parameter_set = i, output = controller_id)
+    task_id <- bind_rows(task_id, temp_tibble)
+}
+
+info <- hipercow::hipercow_rrq_workers_submit(4)
+
 
 ############################ Plotting Simulation ##################
 
@@ -114,3 +134,26 @@ load_simulation_results <- function(task_id) {
   
   return(simulation_results)
 }
+
+###################################################################
+
+ library(tibble)
+ 
+    # Example input data
+    input_data <- tst$input
+ 
+    # Function to dynamically collapse nested lists into a single tibble row
+    collapse_to_tibble <- function(data) {
+      data$treatment_timesteps$mass_bednet <- list(data$treatment_timesteps$mass_bednet)
+      data$treatment_timesteps$irs <- list(data$treatment_timesteps$irs)
+      
+      flattened <- unlist(data, recursive = FALSE)
+      names(flattened) <- gsub("\\.", "_", names(flattened))
+      as_tibble(flattened)
+    }
+ 
+    # Apply function to input data
+    result <- collapse_to_tibble(input_data)
+ 
+    # Print the resulting tibble
+    print(result)
