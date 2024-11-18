@@ -14,7 +14,7 @@ source("set_bednets.R")
 source("set_irs.R")
 source("set_lsm.R")
 source("get_runtime_parameters.R")
-
+source("execution_controller.R")
 # Set seed for reproducibility
 set.seed(123)
 
@@ -59,48 +59,9 @@ parameter_set_output$input <- input
 parameter_set_output$input$parameters <- NULL
 
 if (rrq) {
-  ids <- rrq::rrq_task_create_bulk_call(
-    function(k, input) {
-      
-      result <- malariasimulation::run_simulation(
-        input$timesteps,
-        input$parameters
-      )
-      return(result)
-    },
-    seq_len(reps),
-    args = list(input = input)
-  )
-  
-  task_ids <- ids
-  
+  task_ids <- rrq_malariasim_controller(input, reps)
 } else {
-  cl <- parallel::makeCluster(max(1, reps - 1))
-  
-  parallel::clusterEvalQ(cl, {
-    library(malariasimulation)
-  })
-  
-  parallel::clusterExport(cl, c("input"))
-  
-  task_fun <- function(k, input) {
-    result <- malariasimulation::run_simulation(
-      input$timesteps,
-      input$parameters
-    )
-    return(list(result = result))
-  }
-  
-  results <- parallel::parLapply(cl, seq_len(reps), task_fun, input = input)
-  parallel::stopCluster(cl)
-  
-  for (j in seq_len(reps)) {
-    parameter_set_output[[paste0("rep_", j)]] <- list(
-      result = results[[j]]$result
-    )
-  }
-  
-  output <- parameter_set_output
+  output <- local_cluster_malariasim_controller(input, reps)
 }
 
 if (rrq) {

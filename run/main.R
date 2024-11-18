@@ -27,45 +27,40 @@ library(tibble)
 library(dplyr)
 
 ## Local
-parameter_set <- 2
-reps <- 2
-task_id <- tibble()
+parameter_set <- 1
+reps <- 1
 
 for (i in seq(1, parameter_set)){
-    simulation_prep  <- orderly2::orderly_run("simulation_controller",
+    orderly2::orderly_run("simulation_controller",
     list(run = "long_run",
                     parameter_set = parameter_set,
                     reps = reps,
                     rrq = FALSE))
-    temp_tibble <- tibble(parameter_set = i, output = simulation_prep)
-    task_id <- bind_rows(task_id, temp_tibble)
 }
 
 # Cluster
 library(tibble)
 library(dplyr)
-parameter_set <- 1024
-reps <- 8
+parameter_set <- 1
+reps <- 2
 
 r <- hipercow::hipercow_rrq_controller()
 
-for (i in seq(1, parameter_set)){
-    hipercow::task_create_expr({
-            orderly2::orderly_run(
-            "simulation_controller",
-            list(
-                run = "long_run",
-                parameter_set = parameter_set,
-                reps = reps,
-                rrq = TRUE
-            )
-        )
-    },
-    parallel = hipercow::hipercow_parallel(use_rrq = TRUE)
-    )
-}
+  hipercow::task_create_expr({
+          orderly2::orderly_run(
+          "simulation_controller",
+          list(
+              run = "long_run",
+              parameter_set = parameter_set,
+              reps = reps,
+              rrq = TRUE
+          )
+      )
+  },
+  parallel = hipercow::hipercow_parallel(use_rrq = TRUE)
+  )
 
-info <- hipercow::hipercow_rrq_workers_submit(128)
+info <- hipercow::hipercow_rrq_workers_submit(2)
 
 ############################ Plotting Simulation ##################
 
