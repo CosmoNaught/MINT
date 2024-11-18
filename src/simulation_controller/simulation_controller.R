@@ -21,11 +21,11 @@ set.seed(123)
 # Constants
 YEAR <- 365
 SIM_LENGTH <- 12 * YEAR
-HUMAN_POPULATION <- 100000
+HUMAN_POPULATION <- 1000#00
 
 # Load dependencies
 orderly2::orderly_parameters(run = NULL,
-                             parameter_set = NULL,
+                             param_index = NULL,
                              reps = NULL,
                              rrq = NULL)
 
@@ -43,44 +43,29 @@ orderly2::orderly_dependency("param_sampling", "latest(parameter:run == this:run
 
 lhs_data <- data.table::fread("lhs_scenarios.csv")
 
-output <- list()
-task_ids <- list()
+input <- lapply(1:param_index, function(parameter_set) {
+  get_runtime_parameters(
+    parameter_set,
+    lhs_data,
+    HUMAN_POPULATION,
+    bednet_params,
+    SIM_LENGTH
+  )
+})
 
-input <- get_runtime_parameters(
-  parameter_set,
-  lhs_data,
-  HUMAN_POPULATION,
-  bednet_params,
-  SIM_LENGTH
-)
+# List of vector of size reps of rrq task IDs
+all_ids <- lapply(seq_along(input), function(i) {
+  rrq_malariasim_controller(input[[i]], reps)
+})
 
-parameter_set_output <- list()
-parameter_set_output$input <- input
-parameter_set_output$input$parameters <- NULL
-
-if (rrq) {
-  task_ids <- rrq_malariasim_controller(input, reps)
-} else {
-  output <- local_cluster_malariasim_controller(input, reps)
-}
-
-if (rrq) {
-  all_ids <- unlist(task_ids)
+for (i in seq_along(all_ids)) {
+  # Collect results
+  rrq::rrq_task_wait(all_ids[[i]])
+  results <- rrq::rrq_task_results(all_ids[[i]])
   
-  rrq::rrq_task_wait(all_ids)
-  all_results <- rrq::rrq_task_results(all_ids)
-  
-  parameter_set_output <- list()
-  parameter_set_output$input <- input
+  parameter_set_output <- list(input = input[[i]], outputs = results)
   parameter_set_output$input$parameters <- NULL
-  
-  for (j in seq_len(reps)) {
-    parameter_set_output[[paste0("rep_", j)]] <- list(
-      result = all_results[[j]]
-    )
-  }
-  
-  output <- parameter_set_output
-}
 
-saveRDS(output, file = "simulation_results.rds")
+  # Save results
+  saveRDS(parameter_set_output, file = sprintf("simulation_results_%d.rds", i))
+}

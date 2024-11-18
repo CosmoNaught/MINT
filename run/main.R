@@ -27,13 +27,13 @@ library(tibble)
 library(dplyr)
 
 ## Local
-parameter_set <- 1
+param_index <- 1
 reps <- 1
 
 for (i in seq(1, parameter_set)){
     orderly2::orderly_run("simulation_controller",
     list(run = "long_run",
-                    parameter_set = parameter_set,
+                    param_index = parameter_set,
                     reps = reps,
                     rrq = FALSE))
 }
@@ -41,17 +41,17 @@ for (i in seq(1, parameter_set)){
 # Cluster
 library(tibble)
 library(dplyr)
-parameter_set <- 1
+param_index <- 2
 reps <- 2
 
 r <- hipercow::hipercow_rrq_controller()
 
-  hipercow::task_create_expr({
+  tid <- hipercow::task_create_expr({
           orderly2::orderly_run(
           "simulation_controller",
           list(
               run = "long_run",
-              parameter_set = parameter_set,
+              param_index = param_index,
               reps = reps,
               rrq = TRUE
           )
@@ -60,7 +60,9 @@ r <- hipercow::hipercow_rrq_controller()
   parallel = hipercow::hipercow_parallel(use_rrq = TRUE)
   )
 
-info <- hipercow::hipercow_rrq_workers_submit(2)
+info <- hipercow::hipercow_rrq_workers_submit(4)
+hipercow::task_log_watch(tid)
+
 
 ############################ Plotting Simulation ##################
 

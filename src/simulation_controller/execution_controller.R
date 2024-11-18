@@ -35,7 +35,9 @@ local_cluster_malariasim_controller <- function(input, reps){
   
   results <- parallel::parLapply(cl, seq_len(reps), task_fun, input = input)
   parallel::stopCluster(cl)
-  
+  parameter_set_output <- list()
+  parameter_set_output$input <- input
+  parameter_set_output$input$parameters <- NULL
   for (j in seq_len(reps)) {
     parameter_set_output[[paste0("rep_", j)]] <- list(
       result = results[[j]]$result
