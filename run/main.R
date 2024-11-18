@@ -44,16 +44,14 @@ for (i in seq(1, parameter_set)){
 # Cluster
 library(tibble)
 library(dplyr)
-parameter_set <- 4
+parameter_set <- 1
 reps <- 8
 
-task_id <- tibble()
-
 r <- hipercow::hipercow_rrq_controller()
 
 for (i in seq(1, parameter_set)){
     hipercow::task_create_expr({
-            controller_id <- orderly2::orderly_run(
+            orderly2::orderly_run(
             "simulation_controller",
             list(
                 run = "long_run",
@@ -63,55 +61,11 @@ for (i in seq(1, parameter_set)){
             )
         )
     },
-    parallel = hipercow::hipercow_parallel(use_rrq = TRUE),
-    envvars = hipercow::hipercow_envvars(HIPERCOW_RRQ_QUEUE_ID = r$queue_id)
+    parallel = hipercow::hipercow_parallel(use_rrq = TRUE)
     )
-    temp_tibble <- tibble(parameter_set = i, output = controller_id)
-    task_id <- bind_rows(task_id, temp_tibble)
 }
 
-info <- hipercow::hipercow_rrq_workers_submit(32)
-
-unlink(paste0(getwd(),"/offload/"), recursive = TRUE)
-
-
-###############################
-# Cluster Debug
-library(tibble)
-library(dplyr)
-parameter_set <- 2
-reps <- 2
-
-task_id <- tibble(parameter_set = integer(), output = character())
-
-r <- hipercow::hipercow_rrq_controller()
-
-launch_controller <- function(){
-    controller_id <- orderly2::orderly_run(
-            "simulation_controller",
-            list(
-                run = "long_run",
-                parameter_set = parameter_set,
-                reps = reps,
-                rrq = TRUE
-            )
-        )
-    return(controller_id)
-}
-
-for (i in seq(1, parameter_set)){
-    hipercow::task_create_expr({
-        controller_id <- launch_controller()
-    },
-    parallel = hipercow::hipercow_parallel(use_rrq = TRUE),
-    envvars = hipercow::hipercow_envvars(HIPERCOW_RRQ_QUEUE_ID = r$queue_id)
-    )
-    temp_tibble <- tibble(parameter_set = i, output = controller_id)
-    task_id <- bind_rows(task_id, temp_tibble)
-}
-
-info <- hipercow::hipercow_rrq_workers_submit(4)
-
+info <- hipercow::hipercow_rrq_workers_submit(8)
 
 ############################ Plotting Simulation ##################
 

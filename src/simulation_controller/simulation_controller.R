@@ -3,7 +3,7 @@ library(parallel)
 library(malariasimulation)
 library(tibble)
 library(spearMINT)
-library(arrow)
+#library(arrow)
 library(dplyr)
 
 # Source additional scripts
@@ -43,11 +43,6 @@ orderly2::orderly_dependency("param_sampling", "latest(parameter:run == this:run
 
 lhs_data <- data.table::fread("lhs_scenarios.csv")
 
-# Set up offload directory and create it
-offload_dir <- file.path(hipercow:::hipercow_root()$path$root, "offload")
-dir.create(offload_dir, recursive = TRUE)
-print(paste("Offload directory is:", offload_dir))
-
 output <- list()
 task_ids <- list()
 
@@ -66,18 +61,12 @@ parameter_set_output$input$parameters <- NULL
 if (rrq) {
   ids <- rrq::rrq_task_create_bulk_call(
     function(k, input) {
-      # Set up offload directory and create it
-      offload_dir <- file.path(hipercow:::hipercow_root()$path$root, "offload")
-      dir.create(offload_dir, recursive = TRUE)
-      print(paste("Offload directory is:", offload_dir))
       
       result <- malariasimulation::run_simulation(
         input$timesteps,
         input$parameters
       )
-      f <- tempfile(tmpdir = offload_dir)
-      saveRDS(result, f)
-      return(basename(f))
+      return(result)
     },
     seq_len(reps),
     args = list(input = input)
@@ -125,10 +114,8 @@ if (rrq) {
   parameter_set_output$input$parameters <- NULL
   
   for (j in seq_len(reps)) {
-    result_filename <- all_results[[j]]
-    result <- readRDS(file.path(offload_dir, result_filename))
     parameter_set_output[[paste0("rep_", j)]] <- list(
-      result = result
+      result = all_results[[j]]
     )
   }
   
