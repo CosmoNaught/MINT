@@ -44,7 +44,7 @@ for (i in seq(1, parameter_set)){
 # Cluster
 library(tibble)
 library(dplyr)
-parameter_set <- 1
+parameter_set <- 1024
 reps <- 8
 
 r <- hipercow::hipercow_rrq_controller()
@@ -65,7 +65,7 @@ for (i in seq(1, parameter_set)){
     )
 }
 
-info <- hipercow::hipercow_rrq_workers_submit(8)
+info <- hipercow::hipercow_rrq_workers_submit(128)
 
 ############################ Plotting Simulation ##################
 
