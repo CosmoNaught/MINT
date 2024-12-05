@@ -1,7 +1,9 @@
 rrq_malariasim_controller <- function(input, reps) {
     ids <- rrq::rrq_task_create_bulk_call(
     function(k, input) {
-      
+      #if (runif(1) < 0.5) {
+      #  stop()
+      #}
       result <- malariasimulation::run_simulation(
         input$timesteps,
         input$parameters

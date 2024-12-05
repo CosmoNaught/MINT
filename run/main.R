@@ -41,8 +41,8 @@ for (i in seq(1, parameter_set)){
 # Cluster
 library(tibble)
 library(dplyr)
-param_index <- 2
-reps <- 2
+param_index <- 1024
+reps <- 8
 
 r <- hipercow::hipercow_rrq_controller()
 
@@ -60,7 +60,7 @@ r <- hipercow::hipercow_rrq_controller()
   parallel = hipercow::hipercow_parallel(use_rrq = TRUE)
   )
 
-info <- hipercow::hipercow_rrq_workers_submit(4)
+info <- hipercow::hipercow_rrq_workers_submit(128)
 hipercow::task_log_watch(tid)
 
 
