@@ -68,7 +68,7 @@ all_ids <- lapply(seq_along(input), function(i) {
 })
 cli::cli_progress_done(bar_id)
 
-# rrq_message_send("TIMEOUT_SET", 0, rrq::rrq_worker_list())
+saveRDS(all_ids, "all_ids")
 
 cli::cli_progress_bar("Saving results", total=param_index)
 failed <- data.frame(parameter_set=numeric(0), rep=numeric(0))

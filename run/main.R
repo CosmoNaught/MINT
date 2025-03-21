@@ -91,13 +91,13 @@ r <- hipercow::hipercow_rrq_controller()
   resources = hipercow::hipercow_resources(queue = "AllNodes")
   )
 
-info <- hipercow::hipercow_rrq_workers_submit(256,
+info <- hipercow::hipercow_rrq_workers_submit(512,
 resources = hipercow::hipercow_resources(queue = "AllNodes"))
 hipercow::task_log_watch(tid)
 
 
 ############################ Plotting Simulation ##################
-
+## TO BE DISCONTINUED IN LIGHT OF DATABASE
 orderly2::orderly_run(
         "simulation_plots"
     )

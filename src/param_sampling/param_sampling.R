@@ -91,7 +91,14 @@ colnames(lhs_raw) <- names(all_ranges)
 scaled_lhs_samples <- sapply(names(all_ranges), function(var) {
   range_values <- unlist(all_ranges[[var]])
   values <- lhs_raw[, var]
-  if (var == "eir") {
+  
+  # Define which parameters should be treated as binary
+  binary_params <- c("seasonal", "routine")
+  
+  if (var %in% binary_params) {
+    # For binary variables, round to 0 or 1
+    values <- round(values)
+  } else if (var == "eir") {
     # For EIR, use log scale
     values <- 10^(scales::rescale(values, to = range(log10(range_values))))
   } else if (length(range_values) == 2 && all(range_values %in% c(0, 1))) {
