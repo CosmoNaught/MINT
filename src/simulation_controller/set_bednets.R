@@ -226,7 +226,7 @@ set_bednet_parameters <- function(simparams, lhs_sample, bednet_params, baseline
                         N_species),
                     nrow = N_dist, ncol = N_species)
   gamman_vec <- c(rep(gamman_historic, N_historic_dist),
-                  rep(gamman_future, N_future_dist))
+                  rep(gamman_future, N_future_dist)) * 365
 
   # Set net parameters
   simparams <- malariasimulation::set_bednets(
