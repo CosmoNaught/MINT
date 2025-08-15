@@ -25,20 +25,32 @@ hipercow::task_log_watch(id2)
 
 ############################ Launch simulation setup ############################
 
+## Minimal Test (Debug)
 library(tibble)
 library(dplyr)
+param_index <- 7
+reps <- 8
 
-## Local
-param_index <- 1
-reps <- 1
+r <- hipercow::hipercow_rrq_controller()
 
-for (i in seq(1, param_index)){
-    orderly2::orderly_run("simulation_controller",
-    list(run = "long_run",
-                    param_index = param_index,
-                    reps = reps,
-                    rrq = FALSE))
-}
+  tid <- hipercow::task_create_expr({
+          orderly2::orderly_run(
+          "simulation_controller",
+          list(
+              run = "long_run",
+              param_index = param_index,
+              reps = reps,
+              rrq = TRUE
+          )
+      )
+  },
+  parallel = hipercow::hipercow_parallel(use_rrq = TRUE),
+  resources = hipercow::hipercow_resources(queue = "AllNodes")
+  )
+
+info <- hipercow::hipercow_rrq_workers_submit(64,
+resources = hipercow::hipercow_resources(queue = "AllNodes"))
+hipercow::task_log_watch(tid)
 
 # Cluster Testing
 library(tibble)
@@ -96,10 +108,5 @@ resources = hipercow::hipercow_resources(queue = "AllNodes"))
 hipercow::task_log_watch(tid)
 
 
-############################ Plotting Simulation ##################
-## TO BE DISCONTINUED IN LIGHT OF DATABASE
-orderly2::orderly_run(
-        "simulation_plots"
-    )
-
 ####################################################################
+
