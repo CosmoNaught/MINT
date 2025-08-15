@@ -161,7 +161,7 @@ set_bednet_parameters <- function(simparams, lhs_sample, bednet_params, baseline
   # Historic mass campaigns
   historic_max_usage <- lhs_sample$itn_use
   first_historic_campaign <- 0
-  last_historic_campaign <- 9
+  last_historic_campaign <- 6
   historic_campaign_interval <- 3
 
   # Future mass campaigns
@@ -187,7 +187,7 @@ set_bednet_parameters <- function(simparams, lhs_sample, bednet_params, baseline
   rnm_future <- 0.24
   gamman_future <- selected_net_params_future$gamman
 
-  #-------------------------------------------------------------------------------
+  #-----------------------------------------------------------------------------
   # Calculate dependent parameters
 
   lambda <- 1 / invlambda
@@ -203,7 +203,7 @@ set_bednet_parameters <- function(simparams, lhs_sample, bednet_params, baseline
     future_routine_usage <- 0
   }
 
-  #-------------------------------------------------------------------------------
+  #-----------------------------------------------------------------------------
   # Generate numbers of nets distributed and timings
 
   net_times <- fetch_net_distribution_times()
@@ -226,7 +226,7 @@ set_bednet_parameters <- function(simparams, lhs_sample, bednet_params, baseline
                         N_species),
                     nrow = N_dist, ncol = N_species)
   gamman_vec <- c(rep(gamman_historic, N_historic_dist),
-                  rep(gamman_future, N_future_dist))
+                  rep(gamman_future, N_future_dist)) * 365
 
   # Set net parameters
   simparams <- malariasimulation::set_bednets(

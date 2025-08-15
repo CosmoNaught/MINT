@@ -1,6 +1,6 @@
-mrc-ide/malariasimulation
+mrc-ide/malariasimulation@dev
 mrc-ide/orderly2
-
+mrc-ide/hipercow
 dplyr
 tidyr
 lhs
@@ -10,5 +10,9 @@ GGally
 reshape2
 foreach
 data.table
-
-CosmoNaught/spearMINT
+CosmoNaught/spearMINT@master
+doParallel
+parallel
+pbapply
+tibble
+arrow
