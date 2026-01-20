@@ -12,16 +12,8 @@ hipercow::task_log_watch(id1)
 
 # Local
 
-id2 <- orderly2::orderly_run("param_sampling", 
-list(run = "long_run", gen_grid = FALSE))
-
-# Cluster
-
-id2 <- hipercow::task_create_expr(orderly2::orderly_run("param_sampling", 
-list(run = "long_run",
-local_cluster = FALSE)),
-resources = hipercow::hipercow_resources(cores = 32))
-hipercow::task_log_watch(id2)
+id2 <- orderly2::orderly_run("param_sampling",
+list(run = "long_run", output_grid = FALSE))
 
 ############################ Launch simulation setup ############################
 
@@ -39,6 +31,7 @@ r <- hipercow::hipercow_rrq_controller()
           list(
               run = "long_run",
               param_index = param_index,
+              grid = TRUE,
               reps = reps,
               rrq = TRUE
           )
@@ -57,7 +50,7 @@ library(tibble)
 library(dplyr)
 param_index <- 4#2^14
 reps <- 2
-
+making
 r <- hipercow::hipercow_rrq_controller()
 
   tid <- hipercow::task_create_expr({
@@ -67,6 +60,7 @@ r <- hipercow::hipercow_rrq_controller()
               run = "long_run",
               param_index = param_index,
               reps = reps,
+              grid = TRUE,
               rrq = TRUE
           )
       )
@@ -95,18 +89,47 @@ r <- hipercow::hipercow_rrq_controller()
               run = "long_run",
               param_index = param_index,
               reps = reps,
+              grid = FALSE,
               rrq = TRUE
           )
       )
   },
   parallel = hipercow::hipercow_parallel(use_rrq = TRUE),
-  resources = hipercow::hipercow_resources(queue = "AllNodes")
+  resources = hipercow::hipercow_resources(queue = "AllNodes", requested_nodes = "wpia-009")
   )
 
-info <- hipercow::hipercow_rrq_workers_submit(512,
-resources = hipercow::hipercow_resources(queue = "AllNodes"))
+info <- hipercow::hipercow_rrq_workers_submit(1)
 hipercow::task_log_watch(tid)
 
-
 ####################################################################
+# benchmark
+    library(tibble) 
+    library(dplyr) 
 
+for(ii in 1:10) {
+    param_index <- ii
+    reps <- 8 
+     
+    r <- hipercow::hipercow_rrq_controller() 
+     
+      tid <- hipercow::task_create_expr({ 
+              orderly2::orderly_run( 
+              "simulation_controller", 
+              list( 
+                  run = "long_run", 
+                  param_index = param_index, 
+                  reps = reps, 
+                  grid = FALSE, 
+                  rrq = TRUE 
+              ) 
+          ) 
+      }, 
+      parallel = hipercow::hipercow_parallel(use_rrq = TRUE), 
+      resources = hipercow::hipercow_resources(queue = "AllNodes") 
+      ) 
+     
+    info <- hipercow::hipercow_rrq_workers_submit(1, 
+    resources = hipercow::hipercow_resources(queue = )) 
+    hipercow::task_log_watch(tid)  
+  
+}
