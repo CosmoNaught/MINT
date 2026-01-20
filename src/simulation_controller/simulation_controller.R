@@ -27,6 +27,7 @@ HUMAN_POPULATION <- 100000
 orderly2::orderly_parameters(run = NULL,
                              param_index = NULL,
                              reps = NULL,
+                             grid = NULL,
                              rrq = NULL)
 
 if (!run %in% c("short_run", "long_run")) {
@@ -38,10 +39,18 @@ orderly2::orderly_dependency("collate_bednet_param", "latest()",
 
 bednet_params <- readRDS("bednet_params_raw.RDS")
 
-orderly2::orderly_dependency("param_sampling", "latest(parameter:run == this:run)",
+if (grid) {
+  print("NOTE: parameters will be chosen according to grid sampling")
+  orderly2::orderly_dependency("param_sampling", "latest(parameter:run == this:run)",
+                             c("grid_scenarios.csv" = "grid_scenarios.csv"))
+  lhs_data <- data.table::fread("grid_scenarios.csv")
+} else {
+    print("NOTE: parameters will be chosen according to LHS sampling")
+  orderly2::orderly_dependency("param_sampling", "latest(parameter:run == this:run)",
                              c("lhs_scenarios.csv" = "lhs_scenarios.csv"))
+  lhs_data <- data.table::fread("lhs_scenarios.csv")
+}
 
-lhs_data <- data.table::fread("lhs_scenarios.csv")
 
 ## Set timeout 
 
