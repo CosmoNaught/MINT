@@ -24,7 +24,7 @@ SIM_LENGTH <- 12 * YEAR
 HUMAN_POPULATION <- 100000
 
 # Load dependencies
-orderly2::orderly_parameters(run = NULL,
+orderly::orderly_parameters(run = NULL,
                              param_index = NULL,
                              reps = NULL,
                              grid = NULL,
@@ -34,19 +34,19 @@ if (!run %in% c("short_run", "long_run")) {
   stop(paste0("Please provide either 'short_run' or 'long_run' as query, provided: ", run))
 }
 
-orderly2::orderly_dependency("collate_bednet_param", "latest()", 
+orderly::orderly_dependency("collate_bednet_param", "latest()", 
                              c("bednet_params_raw.RDS" = "bednet_params_raw.RDS"))
 
 bednet_params <- readRDS("bednet_params_raw.RDS")
 
 if (grid) {
   print("NOTE: parameters will be chosen according to grid sampling")
-  orderly2::orderly_dependency("param_sampling", "latest(parameter:run == this:run)",
+  orderly::orderly_dependency("param_sampling", "latest(parameter:run == this:run)",
                              c("grid_scenarios.csv" = "grid_scenarios.csv"))
   lhs_data <- data.table::fread("grid_scenarios.csv")
 } else {
     print("NOTE: parameters will be chosen according to LHS sampling")
-  orderly2::orderly_dependency("param_sampling", "latest(parameter:run == this:run)",
+  orderly::orderly_dependency("param_sampling", "latest(parameter:run == this:run)",
                              c("lhs_scenarios.csv" = "lhs_scenarios.csv"))
   lhs_data <- data.table::fread("lhs_scenarios.csv")
 }

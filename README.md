@@ -3,7 +3,7 @@
 This repo is the R-side pipeline that drives large sweeps of malaria simulations to be used in machine learning training regimes under different intervention portfolios. It’s built on:
 
 - [`malariasimulation`](https://mrc-ide.github.io/malariasimulation/)
-- `orderly2` for workflow management
+- `orderly` for workflow management
 - `hipercow` + `rrq` for cluster execution
 - `spearMINT` for intervention parameter handling (e.g. ITN decay profiles)
 
@@ -21,9 +21,9 @@ The orchestration happens in `run/main.R`:
 
 1. **Cluster setup** via `hipercow::hipercow_init/provision/configuration`.
 2. Kick off the **bednet parameter collator**:
-   - `orderly2::orderly_run("collate_bednet_param")`
+   - `orderly::orderly_run("collate_bednet_param")`
 3. Kick off the **parameter space sampler**:
-   - `orderly2::orderly_run("param_sampling", list(run = "long_run", gen_grid = FALSE))`
+   - `orderly::orderly_run("param_sampling", list(run = "long_run", gen_grid = FALSE))`
 4. Launch the **simulation controller** across the sampled parameter sets using `hipercow` + `rrq`.
 5. Optionally, run a **single test parameter set** (cluster testing block) for quick sanity checks.
 6. Downstream: another orderly task (`simulation_plots`) reads aggregated `simulation_results.rds` and produces PDFs per parameter set.
@@ -68,10 +68,10 @@ Key points:
 
 * Uses `lhs`, `dplyr`, `tidyr`, `GGally`, etc.
 
-* Integrates with `orderly2` via:
+* Integrates with `orderly` via:
 
   ```r
-  orderly2::orderly_parameters(run = NULL, gen_grid = NULL)
+  orderly::orderly_parameters(run = NULL, gen_grid = NULL)
   ```
 
 * Controls sample size via `run`:
@@ -148,7 +148,7 @@ The core pattern is:
 
    * Maintain a `failed` table of (`parameter_set`, `rep`) where simulation execution blew up, and write it to `failed.csv`.
 
-This script is the operational heart of the pipeline: it’s the thing `orderly2::orderly_run("simulation_controller", ...)` actually invokes.
+This script is the operational heart of the pipeline: it’s the thing `orderly::orderly_run("simulation_controller", ...)` actually invokes.
 
 ---
 
@@ -409,12 +409,12 @@ output[[i]]$rep_2$result
 
 #### `src/simulation_plots/simulation_plots.R`
 
-This is an `orderly2` report that wiring everything together:
+This is an `orderly` report that wiring everything together:
 
 * Declares a dependency on the **simulation launch** report:
 
   ```r
-  orderly2::orderly_dependency(
+  orderly::orderly_dependency(
     "simulation_launch", "latest()",
     c("simulation_results.rds" = "simulation_results.rds")
   )

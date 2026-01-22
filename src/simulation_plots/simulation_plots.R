@@ -1,6 +1,6 @@
 source("plot_support.R")
 
-orderly2::orderly_dependency("simulation_launch", "latest()", 
+orderly::orderly_dependency("simulation_launch", "latest()", 
                               c("simulation_results.rds" = "simulation_results.rds"))
 
 output <- readRDS("simulation_results.rds")
